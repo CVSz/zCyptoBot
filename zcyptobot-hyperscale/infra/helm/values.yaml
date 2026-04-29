@@ -3,3 +3,14 @@ observability:
   enabled: true
 security:
   networkPolicies: true
+autonomy:
+  image: ghcr.io/zcyptobot/autonomy-controller:latest
+  codeRewriteEnabled: true
+  policy:
+    maxConcurrentMutations: 2
+    requiredChecks:
+      - unit-tests
+      - policy-scan
+    blockedPaths:
+      - infra/security
+      - .github/workflows
