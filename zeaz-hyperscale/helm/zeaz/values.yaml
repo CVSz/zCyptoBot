@@ -1,0 +1,16 @@
+image:
+  repository: yourrepo/zeaz
+  tag: latest
+
+replicaCount:
+  api: 3
+  worker: 2
+
+resources:
+  api:
+    limits: { cpu: "1", memory: "1Gi" }
+  worker:
+    limits: { cpu: "2", memory: "2Gi" }
+
+ingress:
+  host: zeaz.app

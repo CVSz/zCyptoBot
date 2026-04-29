@@ -1,0 +1,4 @@
+rules:
+  latency_threshold: 200
+  budget_monthly_usd: 1000
+  require_quorum: true
