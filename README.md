@@ -36,6 +36,11 @@ python -c "from zcyptobot.simulator import run_simulation; print(run_simulation(
 python -c "from zcyptobot import Orchestrator; o=Orchestrator(); print(o.run_cycle())"
 ```
 
+
+## Prompt Pack
+
+For ready-to-use safe institutional Codex prompts, see `docs/CODEX_PROMPTS.md`.
+
 ## Disclaimer
 
 This repository is for educational and research purposes only. Trading digital assets involves substantial risk, including total loss of capital. There is no guarantee of profit.
