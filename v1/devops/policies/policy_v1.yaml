@@ -1,0 +1,5 @@
+version: v1
+rules:
+  latency_threshold: 200
+  scale_factor: 2
+  cost_limit: 0.5
