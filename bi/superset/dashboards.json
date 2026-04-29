@@ -1,0 +1,16 @@
+{
+  "dashboard_title": "ZEAZ Growth",
+  "charts": [
+    {
+      "type": "line",
+      "metric": "events_daily.cnt",
+      "dataset": "events_daily",
+      "filters": ["tenant_id", "event", "day"]
+    },
+    {
+      "type": "table",
+      "query": "D1/D7 cohort retention",
+      "dataset": "users+events"
+    }
+  ]
+}
