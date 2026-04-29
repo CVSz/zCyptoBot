@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeaz-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          image: yourrepo/zeaz-api:latest
+        - name: p2p
+          image: yourrepo/p2p-node:latest
+        - name: bridge
+          image: yourrepo/p2p-bridge:latest
+          ports:
+            - containerPort: 8081
