@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin CP</h2>
+<button onclick="toggle(true)">Enable</button>
+<button onclick="toggle(false)">Disable</button>
+<script>
+function toggle(v){
+ fetch('/admin/strategy/toggle?enable='+v,{method:'POST',headers:{'Authorization':'Bearer '+localStorage.token}})
+}
+</script>
+{% endblock %}

@@ -17,6 +17,14 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./infra/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
+
   redis:
     image: redis:7
 
@@ -32,22 +40,23 @@ services:
     depends_on:
       - kafka
 
-  producer_multi:
+  api:
     build: .
-    command: python -m app.data.producer_multi
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
     depends_on:
       - kafka
+      - clickhouse
 
-  arb_engine:
-    build: .
-    command: python -m app.arb.engine
-    depends_on:
-      - kafka
-      - redis
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./app/slo/alerts.yml:/etc/prometheus/alerts.yml
+    ports:
+      - "9090:9090"
 
-  arb_executor:
-    build: .
-    command: python -m app.arb.executor
-    depends_on:
-      - kafka
-      - redis
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
