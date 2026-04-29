@@ -1,0 +1,5 @@
+aiokafka
+httpx
+numpy
+clickhouse-driver
+pydantic-settings
