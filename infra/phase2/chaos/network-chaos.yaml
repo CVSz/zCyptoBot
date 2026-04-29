@@ -1,0 +1,10 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: net-latency
+  namespace: platform
+spec:
+  action: delay
+  delay:
+    latency: "100ms"
+  mode: all
