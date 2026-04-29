@@ -1,0 +1,41 @@
+name: ZEAZ CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r v1/requirements.txt
+          pip install bandit safety
+
+      - name: Run tests
+        run: pytest v1/tests
+
+      - name: Security scan (code)
+        run: bandit -r v1/app
+
+      - name: Security scan (dependencies)
+        run: safety check --full-report
+
+      - name: Build Docker image
+        run: docker build -t yourrepo/zeaz:${{ github.sha }} v1
+
+      - name: Push Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Configure registry login before enabling push"

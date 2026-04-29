@@ -1,0 +1,16 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: region-network-delay
+  namespace: trading
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - trading
+  delay:
+    latency: '200ms'
+    correlation: '20'
+    jitter: '50ms'
+  duration: '5m'

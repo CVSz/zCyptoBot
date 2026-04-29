@@ -1,0 +1,16 @@
+<yandex>
+  <remote_servers>
+    <zeaz_cluster>
+      <shard>
+        <replica>
+          <host>clickhouse-a.trading.svc</host>
+          <port>9000</port>
+        </replica>
+        <replica>
+          <host>clickhouse-b.trading.svc</host>
+          <port>9000</port>
+        </replica>
+      </shard>
+    </zeaz_cluster>
+  </remote_servers>
+</yandex>
