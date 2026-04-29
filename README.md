@@ -4,45 +4,34 @@ Institutional-grade AI Quant Trading System template for research and developmen
 
 ## Overview
 
-ZCYPTOBOT is designed as a modular, event-driven trading platform concept that emphasizes:
+ZCYPTOBOT is a modular, event-driven trading platform concept that emphasizes:
 
 - Discipline over prediction
 - Risk-first execution
 - Automated workflows with strong guardrails
 
-## Core Architecture (Planned)
+## Implemented Architecture
 
 ```text
-[Market Data] -> [Signal Engine] -> [Risk Engine] -> [Execution Engine] -> [Portfolio]
+[Market Data] -> [Data Filter] -> [Signal Engine] -> [Risk Engine] -> [Execution Engine] -> [Portfolio]
 ```
 
-## Suggested Stack
+## Included Components
 
-- Python 3.12 (async-first)
-- FastAPI
-- PostgreSQL + TimescaleDB
-- Redis
-- Kafka
-- Docker / Kubernetes
-- Prometheus / Grafana
+- `DataFilter`: validates symbols and sanitizes noisy ticks
+- `SignalEngine`: sentiment + volatility + open-interest accumulation model
+- `RiskEngine`: risk-budget sizing, drawdown kill-switch, exposure caps
+- `ExecutionEngine`: slippage/fees aware paper execution
+- `Portfolio`: position + cash accounting
+- `QuantBot`: orchestration pipeline
+- `Simulator`: synthetic market generator for end-to-end testing
 
-## Safety & Risk Controls
-
-- Position sizing limits
-- Maximum drawdown kill-switch
-- Per-asset and global exposure caps
-- Stop-loss and take-profit rules
-- Retry and circuit-breaker handling on exchange APIs
-
-## Quick Start (Placeholder)
+## Quick Start
 
 ```bash
-# clone
-# git clone <repo-url>
-# cd zCyptoBot
-
-# run containers
-# docker-compose up --build
+python -m pip install -e .
+pytest
+python -c "from zcyptobot.simulator import run_simulation; print(run_simulation())"
 ```
 
 ## Disclaimer
