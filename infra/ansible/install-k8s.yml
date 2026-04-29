@@ -1,0 +1,29 @@
+---
+- name: Base Kubernetes dependencies
+  hosts: all
+  become: true
+  tasks:
+    - name: Install base packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - containerd
+        update_cache: true
+        state: present
+
+    - name: Enable containerd
+      service:
+        name: containerd
+        enabled: true
+        state: started
+
+- name: Bootstrap control plane
+  hosts: masters
+  become: true
+  tasks:
+    - name: Initialize kubeadm
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf

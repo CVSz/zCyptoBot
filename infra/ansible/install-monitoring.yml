@@ -1,0 +1,10 @@
+---
+- name: Placeholder monitoring prerequisites
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure python3-pip is installed
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: true

@@ -1,0 +1,10 @@
+---
+- name: Install Vault CLI
+  hosts: all
+  become: true
+  tasks:
+    - name: Install vault package
+      apt:
+        name: vault
+        state: present
+        update_cache: true
