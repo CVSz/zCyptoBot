@@ -1,3 +1,5 @@
-fastapi
-uvicorn
-kubernetes
+# Production skeleton currently uses Python stdlib only.
+# Add concrete providers as needed, e.g.:
+# py-libp2p
+# intel-sgx-dcap
+# snarkjs client bindings
