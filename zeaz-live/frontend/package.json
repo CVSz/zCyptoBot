@@ -1,0 +1,21 @@
+{
+  "name": "zeaz-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5",
+    "vite": "^5"
+  }
+}
