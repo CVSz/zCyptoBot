@@ -1,0 +1,17 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: install wireguard
+      apt:
+        name: wireguard
+        state: present
+
+    - name: generate key
+      shell: wg genkey
+      register: privkey
+
+    - name: save key
+      copy:
+        content: "{{ privkey.stdout }}"
+        dest: /etc/wireguard/privatekey
+        mode: "0600"
