@@ -31,3 +31,23 @@ services:
     command: python -m app.signal.consumer
     depends_on:
       - kafka
+
+  producer_multi:
+    build: .
+    command: python -m app.data.producer_multi
+    depends_on:
+      - kafka
+
+  arb_engine:
+    build: .
+    command: python -m app.arb.engine
+    depends_on:
+      - kafka
+      - redis
+
+  arb_executor:
+    build: .
+    command: python -m app.arb.executor
+    depends_on:
+      - kafka
+      - redis
