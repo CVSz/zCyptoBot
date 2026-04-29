@@ -26,3 +26,10 @@ docker compose up --build
 - `zeaz_last_price`
 - `zeaz_position`
 - `zeaz_stream_loop_seconds`
+
+
+## Observability Dashboard
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000` (default `admin/admin`)
+- Prometheus datasource is auto-provisioned.
