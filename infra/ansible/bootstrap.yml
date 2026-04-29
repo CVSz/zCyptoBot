@@ -1,0 +1,23 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Base packages
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - lsb-release
+        update_cache: true
+
+    - name: Install containerd
+      apt:
+        name: containerd
+        state: present
+
+    - name: Enable containerd
+      service:
+        name: containerd
+        state: started
+        enabled: true

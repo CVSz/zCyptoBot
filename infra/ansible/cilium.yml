@@ -1,0 +1,10 @@
+- hosts: master
+  become: true
+  tasks:
+    - name: Install Cilium
+      shell: |
+        set -e
+        curl -L https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz | tar xz
+        ./cilium install --version 1.15.6 --set hubble.enabled=true
+      args:
+        executable: /bin/bash

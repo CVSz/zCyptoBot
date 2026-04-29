@@ -1,0 +1,10 @@
+- hosts: master
+  become: true
+  tasks:
+    - name: Install Istio
+      shell: |
+        set -e
+        curl -L https://istio.io/downloadIstio | sh -
+        istio-*/bin/istioctl install -y
+      args:
+        executable: /bin/bash

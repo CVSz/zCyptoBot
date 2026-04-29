@@ -1,0 +1,17 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Install Kubernetes components
+      shell: |
+        set -e
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/k8s.gpg
+        echo "deb [signed-by=/usr/share/keyrings/k8s.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" > /etc/apt/sources.list.d/k8s.list
+        apt-get update && apt-get install -y kubelet kubeadm kubectl
+      args:
+        executable: /bin/bash
+
+- hosts: master
+  become: true
+  tasks:
+    - name: Init first control plane
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16

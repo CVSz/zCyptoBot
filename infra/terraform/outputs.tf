@@ -1,3 +1,7 @@
-output "k8s_node_names" {
-  value = vsphere_virtual_machine.k8s_nodes[*].name
+output "node_names" {
+  value = [for vm in vsphere_virtual_machine.nodes : vm.name]
+}
+
+output "node_ips" {
+  value = [for vm in vsphere_virtual_machine.nodes : vm.default_ip_address]
 }
