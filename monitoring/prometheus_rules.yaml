@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: zeaz-kpi
+  namespace: monitoring
+spec:
+  groups:
+    - name: zeaz-kpi.rules
+      rules:
+        - record: zeaz:latency:p95
+          expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+        - record: zeaz:error_rate:5m
+          expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))
+        - alert: ZeazHighLatency
+          expr: zeaz:latency:p95 > 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High p95 latency"
+        - alert: ZeazHighErrorRate
+          expr: zeaz:error_rate:5m > 0.02
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High 5xx error rate"
