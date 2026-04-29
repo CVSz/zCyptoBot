@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeaz-aiops
+  labels:
+    app: zeaz-aiops
+spec:
+  replicas: {{ .Values.replicaCount.aiops }}
+  selector:
+    matchLabels:
+      app: zeaz-aiops
+  template:
+    metadata:
+      labels:
+        app: zeaz-aiops
+    spec:
+      serviceAccountName: zeaz
+      containers:
+        - name: aiops
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: aiops
+              containerPort: 9000
+          resources:
+{{ toYaml .Values.resources.aiops | indent 12 }}

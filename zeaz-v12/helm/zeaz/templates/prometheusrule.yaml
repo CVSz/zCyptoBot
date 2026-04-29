@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: zeaz-alerts
+spec:
+  groups:
+    - name: zeaz.rules
+      rules:
+        - alert: HighLatency
+          expr: latency_ms > 200
+          for: 1m
+          labels:
+            severity: critical

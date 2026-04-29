@@ -1,0 +1,34 @@
+image:
+  repository: yourrepo/zeaz
+  tag: latest
+
+replicaCount:
+  api: 2
+  aiops: 1
+
+resources:
+  api:
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+  aiops:
+    limits:
+      cpu: "2"
+      memory: "1Gi"
+
+ingress:
+  host: zeaz.local
+
+service:
+  type: ClusterIP
+  apiPort: 8000
+  aiopsPort: 9000
+
+kafka:
+  enabled: true
+
+redis:
+  enabled: true
+
+clickhouse:
+  enabled: true
