@@ -19,6 +19,11 @@ src/zcyptobot/  # Packaged core modules and simulation stack
 tests/          # Unit/integration regression suite
 ```
 
+
+## Merged Blueprint
+
+See `docs/MERGED_BLUEPRINT.md` for the merged end-to-end architecture snapshot and path mapping used in this repository.
+
 ## Quick Start
 
 ```bash
