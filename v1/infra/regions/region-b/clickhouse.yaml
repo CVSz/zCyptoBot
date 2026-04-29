@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: clickhouse-b
+  namespace: trading
+spec:
+  serviceName: clickhouse-b
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse-b
+  template:
+    metadata:
+      labels:
+        app: clickhouse-b
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server:24.8
+          ports:
+            - containerPort: 9000
+            - containerPort: 8123

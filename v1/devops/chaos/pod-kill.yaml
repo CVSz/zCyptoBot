@@ -1,0 +1,12 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: trading-pod-kill
+  namespace: trading
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - trading
+  duration: '2m'
