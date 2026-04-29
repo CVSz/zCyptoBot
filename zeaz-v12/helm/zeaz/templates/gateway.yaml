@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: zeaz
+spec:
+  hosts:
+  - zeaz.app
+  http:
+  - route:
+    - destination:
+        host: zeaz-api
+        subset: region-a
+      weight: 50
+    - destination:
+        host: zeaz-api
+        subset: region-b
+      weight: 50
