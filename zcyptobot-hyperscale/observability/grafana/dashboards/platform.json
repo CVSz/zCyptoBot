@@ -1,0 +1,23 @@
+{
+  "title": "Hyperscale Platform",
+  "panels": [
+    {
+      "title": "Service Count",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "220"
+        }
+      ]
+    },
+    {
+      "title": "CPU",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total[5m]))"
+        }
+      ]
+    }
+  ]
+}

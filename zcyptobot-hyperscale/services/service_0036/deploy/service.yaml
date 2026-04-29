@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service_0036
+spec:
+  selector:
+    app: service_0036
+  ports:
+  - port: 80
+    targetPort: 80

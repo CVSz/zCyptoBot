@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service_0042
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: service_0042
+  template:
+    metadata:
+      labels:
+        app: service_0042
+    spec:
+      containers:
+      - name: service_0042
+        image: ghcr.io/example/service_0042:latest
+        ports:
+        - containerPort: 80
