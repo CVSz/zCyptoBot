@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  oidc.config: |
+    name: Auth0
+    issuer: https://your-domain/
+    clientID: your-client-id
+    clientSecret: $oidc.auth0.clientSecret
+    requestedScopes:
+      - openid
+      - profile
+      - email

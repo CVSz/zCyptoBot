@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: zeaz
+spec:
+  hosts:
+    - zeaz.app
+  http:
+    - route:
+        - destination:
+            host: zeaz-api
+            subset: stable
+          weight: 90
+        - destination:
+            host: zeaz-api
+            subset: canary
+          weight: 10
+      mirror:
+        host: zeaz-api
+        subset: shadow
