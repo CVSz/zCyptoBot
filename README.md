@@ -1,59 +1,59 @@
-# ZCYPTOBOT
+# ZCYPTOBOT — FULL STACK (AI + HFT + INFRA)
 
-AI Quant Trading System (Production Ready)
+A progressive, end-to-end trading system scaffold that combines AI/RL strategy workflows, event-driven data pipelines, arbitrage execution, infrastructure automation, and low-latency HFT hooks.
 
-## Run
+## Layers
+
+- AI Quant Engine (RL + signals)
+- Event-driven processing (Kafka)
+- Arbitrage engine (multi-exchange)
+- Infra automation (Terraform + Ansible + K8s + Vault + monitoring)
+- HFT hooks (eBPF + DPDK + AF_XDP)
+
+## Repository Structure (high level)
+
+```text
+app/            # Trading app modules (data, signal, risk, execution, AI, arb)
+infra/          # Terraform, Ansible, K8s, scripts, and HFT support files
+src/zcyptobot/  # Packaged core modules and simulation stack
+tests/          # Unit/integration regression suite
+```
+
+## Quick Start
 
 ```bash
 docker-compose up --build
 ```
 
-## Endpoint
-
-GET /health
-
-## Strategy
-
-- Volatility + Momentum + OI
-
-## Risk
-
-- Max risk per trade
-- Drawdown kill-switch
-
-## Tier-1 On-Prem Infrastructure (Ubuntu 24.04 + VMware)
-
-This repository now includes an on-premises, cloud-grade infrastructure scaffold under `infra/` for:
-
-- Terraform + vSphere VM provisioning
-- Ansible Kubernetes bootstrap (kubeadm)
-- Self-hosted Vault (HA-ready StatefulSet)
-- Strimzi Kafka baseline
-- Prometheus + Grafana manifests
-- Ingress + bootstrap automation script
-
-### Layout
+Service health endpoint:
 
 ```text
-infra/
-├── terraform/
-├── ansible/
-├── k8s/
-│   ├── vault/
-│   ├── kafka/
-│   ├── monitoring/
-│   └── ingress/
-└── scripts/
+GET /health
 ```
 
-### Bootstrap (example)
+## Infrastructure Deploy
 
 ```bash
-./infra/scripts/bootstrap.sh
+bash infra/scripts/deploy.sh
 ```
 
-> Note: manifests are starter templates and should be hardened for production (TLS, RBAC, NetworkPolicies, storage classes, and secret management).
+## Deployment UI
+
+```bash
+uvicorn infra.scripts.ui:app --port 9000
+```
+
+## Phase 2 Validation
+
+```bash
+k6 run infra/phase2/k6/load.js
+kubectl apply -f infra/phase2/chaos/
+```
+
+## Reality Check
+
+This repository provides **institutional-style architecture patterns** for research/lab usage. Running true production HFT in live venues still requires specialized hardware and exchange colocation.
 
 ## Warning
 
-No guaranteed profit. Use carefully.
+No guaranteed profit. Trade responsibly.
