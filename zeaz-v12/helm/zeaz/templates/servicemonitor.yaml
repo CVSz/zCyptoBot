@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: zeaz
+spec:
+  selector:
+    matchLabels:
+      app: zeaz-api
+  endpoints:
+    - port: http
+      interval: 15s

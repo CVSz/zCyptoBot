@@ -1,0 +1,4 @@
+apiVersion: v2
+name: zeaz
+version: 0.1.0
+appVersion: "1.0"

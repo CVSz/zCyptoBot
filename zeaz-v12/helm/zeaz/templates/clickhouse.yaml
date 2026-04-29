@@ -1,0 +1,10 @@
+{{- if .Values.clickhouse.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zeaz-clickhouse
+  labels:
+    app: zeaz-clickhouse
+data:
+  clickhouse.dsn: clickhouse://clickhouse:9000/default
+{{- end }}

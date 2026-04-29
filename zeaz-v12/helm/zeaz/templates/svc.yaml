@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zeaz-api
+  labels:
+    app: zeaz-api
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: zeaz-api
+  ports:
+    - name: http
+      port: {{ .Values.service.apiPort }}
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zeaz-aiops
+  labels:
+    app: zeaz-aiops
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: zeaz-aiops
+  ports:
+    - name: aiops
+      port: {{ .Values.service.aiopsPort }}
+      targetPort: aiops

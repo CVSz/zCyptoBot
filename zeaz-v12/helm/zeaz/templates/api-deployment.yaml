@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeaz-api
+  labels:
+    app: zeaz-api
+spec:
+  replicas: {{ .Values.replicaCount.api }}
+  selector:
+    matchLabels:
+      app: zeaz-api
+  template:
+    metadata:
+      labels:
+        app: zeaz-api
+    spec:
+      serviceAccountName: zeaz
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+{{ toYaml .Values.resources.api | indent 12 }}
