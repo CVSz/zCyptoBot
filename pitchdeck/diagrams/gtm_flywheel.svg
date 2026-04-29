@@ -1,0 +1,5 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='600'>
+<rect width='1000' height='600' fill='#020617'/><text x='40' y='60' fill='#e2e8f0' font-size='34'>GTM Flywheel</text>
+<circle cx='500' cy='320' r='180' fill='none' stroke='#38bdf8' stroke-width='8'/>
+<text x='435' y='230' fill='white'>Pilot Funds</text><text x='620' y='320' fill='white'>Proof</text><text x='460' y='430' fill='white'>Referrals</text><text x='300' y='320' fill='white'>Expansion</text>
+</svg>
