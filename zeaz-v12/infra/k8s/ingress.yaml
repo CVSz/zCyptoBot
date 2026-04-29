@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zeaz
+  namespace: zeaz
+spec:
+  rules:
+    - host: zeaz.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: zeaz-api
+                port:
+                  number: 8000

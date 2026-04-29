@@ -1,0 +1,4 @@
+redis
+clickhouse-driver
+numpy
+torch
