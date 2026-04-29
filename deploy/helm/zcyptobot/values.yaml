@@ -1,0 +1,8 @@
+replicaCount: 3
+image:
+  repository: yourrepo/zcypto
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 8000
