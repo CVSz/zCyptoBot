@@ -1,10 +1,14 @@
 # ZEAZ SCANNET + Automos Meta V3
 
-Streaming-first crypto signal pipeline optimized for low-latency local deployment.
+Production baseline for a local quant stack (Ryzen 5 3400G / 32GB RAM / NVMe) with separated data-plane and control-plane services.
 
 ## Architecture
 
-Ingestion -> Kafka -> Stream Processor -> ClickHouse
+`Ingestion -> Kafka -> Stream Processor -> ClickHouse`
+
+- **Dataplane**: `app/dataplane_main.py` (market ingestion only)
+- **Control plane**: `app/control_main.py` (signal + risk + execution + persistence)
+- **Observability**: Prometheus metrics on `:9000/metrics`
 
 ## Run
 
@@ -12,3 +16,13 @@ Ingestion -> Kafka -> Stream Processor -> ClickHouse
 cd zeaz/infra
 docker compose up --build
 ```
+
+## Key Metrics
+
+- `zeaz_ticks_ingested_total`
+- `zeaz_signals_emitted_total{side}`
+- `zeaz_orders_executed_total{side}`
+- `zeaz_risk_rejections_total`
+- `zeaz_last_price`
+- `zeaz_position`
+- `zeaz_stream_loop_seconds`

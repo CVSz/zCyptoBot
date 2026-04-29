@@ -5,6 +5,7 @@ import httpx
 from aiokafka import AIOKafkaProducer
 
 from app.config import settings
+from app.observability.metrics import last_price, ticks_ingested
 
 
 async def run() -> None:
@@ -23,6 +24,8 @@ async def run() -> None:
 
                 payload = {"price": price}
                 await producer.send_and_wait("market", json.dumps(payload).encode())
+                ticks_ingested.inc()
+                last_price.set(price)
                 await asyncio.sleep(1)
     finally:
         await producer.stop()
