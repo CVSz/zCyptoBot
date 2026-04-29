@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cost-alerts
+spec:
+  groups:
+  - name: cost.rules
+    rules:
+    - alert: BudgetExceeded
+      expr: cost_usage > budget_limit
+      for: 5m
