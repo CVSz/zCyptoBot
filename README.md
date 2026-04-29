@@ -34,6 +34,11 @@ pytest
 python -c "from zcyptobot.simulator import run_simulation; print(run_simulation())"
 ```
 
+
+## Prompt Pack
+
+For ready-to-use safe institutional Codex prompts, see `docs/CODEX_PROMPTS.md`.
+
 ## Disclaimer
 
 This repository is for educational and research purposes only. Trading digital assets involves substantial risk, including total loss of capital. There is no guarantee of profit.
