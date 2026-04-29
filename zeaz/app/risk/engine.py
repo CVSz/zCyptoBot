@@ -1,3 +1,6 @@
+from app.observability.metrics import position, risk_rejections
+
+
 class RiskEngine:
     def __init__(self, max_risk: float, max_pos: float):
         self.max_risk = max_risk
@@ -8,6 +11,7 @@ class RiskEngine:
         size = self.max_pos * self.max_risk
         direction = 1 if sig == "LONG" else -1
         if abs(self.pos + (direction * size)) > self.max_pos:
+            risk_rejections.inc()
             return 0.0
         return size
 
@@ -16,3 +20,4 @@ class RiskEngine:
             self.pos += size
         else:
             self.pos -= size
+        position.set(self.pos)

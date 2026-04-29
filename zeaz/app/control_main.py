@@ -1,13 +1,12 @@
 import asyncio
 
-from app.ingestion.market import run as ingest
 from app.observability.metrics import start_metrics_server
 from app.stream.processor import run as processor
 
 
 async def main() -> None:
     start_metrics_server()
-    await asyncio.gather(ingest(), processor())
+    await processor()
 
 
 if __name__ == "__main__":

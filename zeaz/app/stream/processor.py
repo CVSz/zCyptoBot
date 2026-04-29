@@ -1,4 +1,5 @@
 import json
+import time
 
 from aiokafka import AIOKafkaConsumer
 
@@ -7,6 +8,7 @@ from app.execution.engine import ExecutionEngine
 from app.risk.engine import RiskEngine
 from app.signal.engine import SignalEngine
 from app.storage.clickhouse import ClickHouse
+from app.observability.metrics import loop_latency, signals_emitted
 
 
 async def run() -> None:
@@ -27,6 +29,7 @@ async def run() -> None:
 
     try:
         async for msg in consumer:
+            started = time.perf_counter()
             data = json.loads(msg.value)
             price = data["price"]
 
@@ -36,7 +39,9 @@ async def run() -> None:
 
             sig = signal.generate(prices[-10:])
             if sig == "HOLD":
+                loop_latency.observe(time.perf_counter() - started)
                 continue
+            signals_emitted.labels(side=sig).inc()
 
             size = risk.validate(sig)
             if size == 0:
@@ -45,5 +50,6 @@ async def run() -> None:
             await exec_engine.execute(sig, size)
             risk.update(sig, size)
             db.insert(sig, size, price)
+            loop_latency.observe(time.perf_counter() - started)
     finally:
         await consumer.stop()

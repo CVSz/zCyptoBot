@@ -19,10 +19,21 @@ services:
     volumes:
       - ./clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  app:
+  dataplane:
     build:
       context: ..
       dockerfile: Dockerfile
+    command: ["python", "app/dataplane_main.py"]
+    depends_on:
+      - kafka
+
+  control-plane:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: ["python", "app/control_main.py"]
+    ports:
+      - "9000:9000"
     depends_on:
       - kafka
       - clickhouse
