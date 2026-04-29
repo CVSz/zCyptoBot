@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zcyptobot
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/example/zcyptobot
+    targetRevision: main
+    path: deploy/helm/zcyptobot
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: trading
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
