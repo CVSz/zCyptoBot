@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aiops-loop
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: aiops-sa
+          containers:
+          - name: aiops
+            image: yourrepo/zeaz:latest
+            command:
+            - python
+            - -c
+            - |
+              from app.aiops.orchestrator import run_loop
+              import random
+
+              def f():
+                  return {
+                      'latency': random.random(),
+                      'error_rate': random.random() / 10,
+                      'kafka_lag': random.random() * 5,
+                  }
+
+              run_loop(f, 5)
+          restartPolicy: OnFailure
