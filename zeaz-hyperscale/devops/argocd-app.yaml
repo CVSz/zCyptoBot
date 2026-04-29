@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zeaz
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://github.com/YOUR_REPO/zeaz-hyperscale
+    path: helm/zeaz
+    targetRevision: main
+    helm:
+      valueFiles: [values.yaml]
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zeaz
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
