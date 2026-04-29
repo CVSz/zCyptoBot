@@ -1,0 +1,3 @@
+service: service_0212
+port: 80
+log_level: INFO

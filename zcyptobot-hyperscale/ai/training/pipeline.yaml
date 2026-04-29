@@ -1,0 +1,6 @@
+stages:
+- ingest
+- feature_engineering
+- train
+- evaluate
+- deploy

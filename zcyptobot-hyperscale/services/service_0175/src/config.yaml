@@ -1,0 +1,3 @@
+service: service_0175
+port: 80
+log_level: INFO
