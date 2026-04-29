@@ -10,3 +10,6 @@ aiokafka
 redis
 websockets
 orjson
+torch
+gymnasium
+scikit-learn

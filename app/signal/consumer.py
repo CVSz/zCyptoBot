@@ -1,13 +1,15 @@
 from app.core.event_bus import KafkaConsumerWrapper
 from app.execution.binance import BinanceExchange
 from app.risk.engine import RiskEngine
-from app.signal.engine import SignalEngine
+from app.ai.inference import RLInference
+from app.features.builder import FeatureBuilder
 
 
 class SignalWorker:
     def __init__(self):
         self.consumer = KafkaConsumerWrapper("market")
-        self.signal = SignalEngine()
+        self.rl = RLInference()
+        self.features = FeatureBuilder()
         self.risk = RiskEngine(0.02, 0.2)
         self.exec = BinanceExchange("KEY", "SECRET")
         self.buffer = []
@@ -22,7 +24,8 @@ class SignalWorker:
             if len(self.buffer) < 5:
                 continue
 
-            sig = self.signal.compute(self.buffer, 1000, 900)
+            state = self.features.build(self.buffer, 1000, 900)
+            sig = self.rl.predict(state)
 
             if sig == "HOLD":
                 continue
