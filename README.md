@@ -25,6 +25,7 @@ ZCYPTOBOT is a modular, event-driven trading platform concept that emphasizes:
 - `Portfolio`: position + cash accounting
 - `QuantBot`: orchestration pipeline
 - `Simulator`: synthetic market generator for end-to-end testing
+- `Orchestrator`: service-level run cycle that coordinates social discovery + market ingestion
 
 ## Quick Start
 
@@ -32,6 +33,7 @@ ZCYPTOBOT is a modular, event-driven trading platform concept that emphasizes:
 python -m pip install -e .
 pytest
 python -c "from zcyptobot.simulator import run_simulation; print(run_simulation())"
+python -c "from zcyptobot import Orchestrator; o=Orchestrator(); print(o.run_cycle())"
 ```
 
 ## Disclaimer
