@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>God Mode</h2>
+<button onclick="kill(true)">KILL ON</button>
+<button onclick="kill(false)">KILL OFF</button>
+<script>
+function kill(v){
+ fetch('/god/kill-switch?on='+v,{method:'POST',headers:{'Authorization':'Bearer '+localStorage.token}})
+}
+</script>
+{% endblock %}

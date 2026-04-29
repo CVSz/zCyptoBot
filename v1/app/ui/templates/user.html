@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>User CP</h2>
+<div id="portfolio"></div>
+<script>
+fetch('/user/portfolio', {headers:{'Authorization':'Bearer '+localStorage.token}})
+.then(r=>r.json()).then(d=>document.getElementById('portfolio').innerText=JSON.stringify(d))
+</script>
+{% endblock %}

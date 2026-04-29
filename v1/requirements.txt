@@ -13,3 +13,7 @@ orjson
 torch
 gymnasium
 scikit-learn
+clickhouse-driver
+PyJWT
+prometheus-client
+jinja2
