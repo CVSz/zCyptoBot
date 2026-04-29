@@ -1,0 +1,7 @@
+image:
+  repository: yourrepo/zeaz
+  tag: latest
+
+replicaCount:
+  api: 3
+  worker: 2
