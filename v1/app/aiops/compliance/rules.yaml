@@ -1,0 +1,12 @@
+jurisdiction:
+  EU:
+    max_latency: 300
+    carbon_limit: 300
+  US:
+    max_latency: 500
+
+pricing:
+  max_markup: 2.0
+
+security:
+  require_quorum: true
