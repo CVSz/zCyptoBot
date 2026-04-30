@@ -1,0 +1,18 @@
+tests:
+  - name: regional_failover
+    inject: region_outage
+    expected:
+      rto: "<=30m"
+      slo: "maintained"
+
+  - name: latency_spike
+    inject: +200ms
+    expected:
+      autoscale: true
+      routing_shift: true
+
+  - name: dependency_down
+    inject: provider_outage
+    expected:
+      failover: true
+      degraded_mode: true
