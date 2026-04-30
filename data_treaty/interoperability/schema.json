@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "user_id": {"type": "string"},
+    "region": {"type": "string"},
+    "data": {"type": "object"}
+  },
+  "required": ["user_id", "region", "data"]
+}
