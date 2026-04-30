@@ -3,7 +3,8 @@ set -euo pipefail
 
 if [ ! -d codeql ]; then
   echo "Downloading CodeQL CLI..."
-  curl -sSL -o codeql.zip https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-bundle-linux64.zip
+  curl -fL --retry 3 --retry-all-errors --retry-delay 2 -o codeql.zip     https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-bundle-linux64.zip
+  unzip -tq codeql.zip >/dev/null
   unzip -q codeql.zip -d codeql
   rm codeql.zip
 fi

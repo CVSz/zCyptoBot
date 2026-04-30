@@ -18,7 +18,7 @@ Features:
 """
 
 import ast
-import datetime
+from datetime import UTC, datetime
 import json
 import logging
 import subprocess
@@ -79,7 +79,7 @@ def git_configure() -> None:
 
 
 def create_autofix_branch() -> str:
-    branch = AUTOFIX_BRANCH_PREFIX + datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
+    branch = AUTOFIX_BRANCH_PREFIX + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
     run(["git", "checkout", "-b", branch], cwd=REPO_DIR)
     logger.info("Created branch %s", branch)
     return branch
@@ -270,7 +270,7 @@ def write_graph_json(graph: nx.DiGraph) -> None:
 
 
 def append_changelog(entry: str) -> None:
-    ts = datetime.datetime.utcnow().isoformat() + "Z"
+    ts = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     content = f"## {ts} - DeepScan Autofix\n\n{entry}\n\n"
     if CHANGELOG.exists():
         CHANGELOG.write_text(CHANGELOG.read_text(encoding="utf-8") + "\n" + content, encoding="utf-8")
