@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeaz-api
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: zeaz-api
+  template:
+    metadata:
+      labels:
+        app: zeaz-api
+    spec:
+      containers:
+      - name: api
+        image: yourrepo/zeaz-api:latest
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
