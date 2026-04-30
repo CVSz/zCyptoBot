@@ -1,0 +1,3 @@
+- SI integrations (default in delivery)
+- Security vendors bundle GID
+- Governments mandate in tenders

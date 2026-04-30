@@ -1,0 +1,3 @@
+service:
+  name: authz
+  port: 9000

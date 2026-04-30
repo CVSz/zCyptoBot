@@ -1,0 +1,3 @@
+tenant:
+  max_unit_cost: 0.05
+  latency_slo_ms: 200

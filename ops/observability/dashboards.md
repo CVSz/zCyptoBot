@@ -1,0 +1,4 @@
+- p95 auth latency (<5ms)
+- revocation propagation (<60s)
+- deny rate (policy violations)
+- cross-region routing %

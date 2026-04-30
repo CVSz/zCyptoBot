@@ -1,0 +1,3 @@
+- Scale authz horizontally
+- Increase edge cache TTL for JWKS (not revocation)
+- Monitor lag until <60s

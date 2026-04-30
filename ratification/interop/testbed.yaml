@@ -1,0 +1,9 @@
+clusters:
+  - aws
+  - gcp
+  - azure
+  - eu
+tests:
+  - cross-cloud auth
+  - revocation
+  - policy enforcement

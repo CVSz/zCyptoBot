@@ -1,0 +1,4 @@
+- M1: Draft -00 submitted
+- M2: 3 independent implementations
+- M3: Public interop report
+- M4: WG adoption call

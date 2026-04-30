@@ -1,0 +1,2 @@
+- alert: HighLatency
+  expr: latency_p95 > 200

@@ -1,0 +1,4 @@
+- alert: GIDHighLatency
+  expr: auth_latency_p95_ms > 5
+- alert: RevocationLag
+  expr: revocation_delay_seconds > 60
