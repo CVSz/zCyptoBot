@@ -1,0 +1,5 @@
+- Zero-trust identity (OIDC + mTLS)
+- Data residency + tenant isolation (RLS/namespace)
+- SLO guardrails (latency/error budgets)
+- Cost ceilings per-tenant
+- Immutable audit (append-only)
