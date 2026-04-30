@@ -1,0 +1,2 @@
+- Entra ID federation
+- AKS + Istio integration

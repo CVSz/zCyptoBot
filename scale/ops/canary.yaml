@@ -1,0 +1,5 @@
+strategy:
+  canary:
+    steps:
+      - setWeight: 10
+      - pause: {}

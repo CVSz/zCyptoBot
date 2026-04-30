@@ -1,0 +1,4 @@
+scrape_configs:
+- job_name: gid
+  static_configs:
+  - targets: ["authz:9000"]

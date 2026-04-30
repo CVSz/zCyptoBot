@@ -1,0 +1,4 @@
+- Rotate keys (JWKS publish new kid)
+- Revoke active JTIs
+- Force re-auth (invalidate sessions)
+- Verify via telemetry (drop in old-kid usage)

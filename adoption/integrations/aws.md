@@ -1,0 +1,3 @@
+- API Gateway authorizer (GID verifier)
+- IAM federation (map GID → roles)
+- Marketplace listing

@@ -1,0 +1,2 @@
+- Publish GID as default auth plugin (AWS/GCP/Azure marketplaces)
+- One-click install for Kubernetes / serverless

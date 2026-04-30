@@ -1,0 +1,4 @@
+- Problem: cross-cloud identity fragmentation
+- Solution: GID (portable + verifiable)
+- Evidence: multi-cloud deployment + telemetry
+- Security: strong (mTLS + attestation)

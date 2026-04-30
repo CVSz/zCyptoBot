@@ -1,0 +1,3 @@
+- Shift DNS/traffic to healthy regions
+- Warm edge caches (JWKS, revocation)
+- Verify SLO + error budgets

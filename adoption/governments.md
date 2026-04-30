@@ -1,0 +1,3 @@
+- Embed GID in RFP requirements
+- Offer sovereign identity + compliance pack
+- Pilot with public sector workloads

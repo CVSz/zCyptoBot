@@ -1,0 +1,2 @@
+- Land GID inside API gateway and IAM workflows for each major cloud.
+- Publish managed integration references and one-click templates.
