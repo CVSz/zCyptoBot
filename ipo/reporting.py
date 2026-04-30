@@ -4,5 +4,5 @@ def quarterly(arr, growth, margin):
     return {
         "ARR": arr,
         "Growth": growth,
-        "Margin": margin
+        "Margin": margin,
     }
