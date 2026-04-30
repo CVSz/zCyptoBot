@@ -1,0 +1,3 @@
+- Trust Services Criteria (CC series)
+- Control evidence (logs, configs)
+- 6–12 months observation window (Type II)

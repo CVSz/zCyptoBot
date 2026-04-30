@@ -1,0 +1,14 @@
+controls:
+  - id: AC-01
+    name: Access Control
+    frameworks: ["ISO27001:A.9", "SOC2:CC6", "GDPR:Art32"]
+    description: "Least privilege + strong auth"
+
+  - id: EN-01
+    name: Encryption
+    frameworks: ["ISO27001:A.10", "SOC2:CC6", "GDPR:Art32"]
+    description: "TLS1.3 + AES-256 at rest"
+
+  - id: LG-01
+    name: Logging & Monitoring
+    frameworks: ["ISO27001:A.12", "SOC2:CC7"]

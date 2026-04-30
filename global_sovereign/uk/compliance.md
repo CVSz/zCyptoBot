@@ -1,0 +1,3 @@
+- UK GDPR
+- Data residency UK/EU
+- Public sector G-Cloud alignment

@@ -1,0 +1,3 @@
+- UAE data protection law
+- Saudi PDPL
+- In-country data processing required

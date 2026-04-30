@@ -1,0 +1,4 @@
+- Lawful basis + RoPA
+- DPIA for high-risk processing
+- DSR (access/erasure)
+- Breach notification workflow
