@@ -18,10 +18,11 @@ from pathlib import Path
 import shutil
 import subprocess
 from typing import Any, Dict, List, Tuple
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 import uuid
 
 import networkx as nx
-import requests
 
 try:
     import astor
@@ -121,11 +122,22 @@ def create_gitea_pr(server_url: str, repo_full: str, branch: str, title: str, bo
     if labels:
         payload["labels"] = labels
     headers = {"Authorization": f"token {token}", "Content-Type": "application/json"}
-    resp = requests.post(api, json=payload, headers=headers, timeout=30)
-    if resp.status_code not in (200, 201):
-        logger.error("Failed to create PR: %s %s", resp.status_code, resp.text)
-        return None
-    return resp.json()
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib_request.Request(api, data=data, headers=headers, method="POST")
+    try:
+        with urllib_request.urlopen(req, timeout=30) as response:
+            status = response.getcode()
+            raw = response.read().decode("utf-8")
+            if status not in (200, 201):
+                logger.error("Failed to create PR: %s %s", status, raw)
+                return None
+            return json.loads(raw) if raw else {}
+    except urllib_error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", errors="replace")
+        logger.error("Failed to create PR: %s %s", exc.code, err_body)
+    except urllib_error.URLError as exc:
+        logger.error("Failed to create PR request: %s", exc.reason)
+    return None
 
 
 @dataclass
