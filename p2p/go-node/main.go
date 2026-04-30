@@ -8,10 +8,12 @@ import (
 
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	discovery "github.com/libp2p/go-libp2p/core/discovery"
 	host "github.com/libp2p/go-libp2p/core/host"
 	peer "github.com/libp2p/go-libp2p/core/peer"
 	mdns "github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	routingdiscovery "github.com/libp2p/go-libp2p/p2p/discovery/routing"
+	discoveryutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 )
 
 type mdnsNotifee struct{ h host.Host }
@@ -45,10 +47,7 @@ func main() {
 	}
 
 	routingDiscovery := routingdiscovery.NewRoutingDiscovery(kdht)
-	_, err = routingdiscovery.Advertise(ctx, routingDiscovery, "zeaz-network", routingdiscovery.TTL(time.Minute))
-	if err != nil {
-		log.Fatalf("failed to advertise dht namespace: %v", err)
-	}
+	discoveryutil.Advertise(ctx, routingDiscovery, "zeaz-network", discovery.TTL(time.Minute))
 
 	fmt.Printf("Node ID: %s\n", h.ID().String())
 	select {}
