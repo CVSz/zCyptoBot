@@ -1,0 +1,68 @@
+name: Deep Scan & Autofix
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+jobs:
+  deep_scan:
+    runs-on: docker
+    container:
+      image: python:3.10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          pip install sentence-transformers scikit-learn networkx prometheus-client black flake8
+
+      - name: Run deep scan
+        run: python tools/deep_scan.py
+
+      - name: Commit autofixes
+        run: |
+          git config --global user.name "DeepScanBot"
+          git config --global user.email "bot@example.com"
+          git add .
+          git commit -m "DeepScan Autofix applied" || echo "No autofix changes to commit"
+          git push
+
+  security_scan:
+    runs-on: docker
+    container:
+      image: github/codeql-action/python
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  lint_and_format:
+    runs-on: docker
+    container:
+      image: python:3.10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Install linters
+        run: pip install black flake8
+      - name: Run linting
+        run: |
+          black --check .
+          flake8 .
+
+  docker_validation:
+    runs-on: docker
+    container:
+      image: hadolint/hadolint:latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Validate Dockerfile
+        run: hadolint Dockerfile
