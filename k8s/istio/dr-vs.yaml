@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: zeaz-api
+spec:
+  host: zeaz-api
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: zeaz-api
+spec:
+  hosts:
+  - api.zeaz.io
+  gateways:
+  - zeaz-gateway
+  http:
+  - route:
+    - destination:
+        host: zeaz-api
+        port:
+          number: 80
