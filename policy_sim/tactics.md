@@ -1,0 +1,5 @@
+- Join standards bodies
+- Publish reference implementations
+- Co-author with regulators
+- Embed language in tenders
+- Partner with local champions
