@@ -7,22 +7,18 @@ on:
 
 jobs:
   deep_scan:
-    runs-on: docker
-    container:
-      image: python:3.10-slim
-    env:
-      PROMETHEUS_PORT: "8000"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install system deps
         run: |
-          apt-get update && apt-get install -y git curl unzip
+          sudo apt-get update && sudo apt-get install -y git curl unzip
 
       - name: Install Python deps
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8
 
       - name: Run deep scan dry run
@@ -36,9 +32,7 @@ jobs:
 
       - name: Run deep scan and apply fixes
         env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          GITEA_SERVER_URL: ${{ secrets.GITEA_SERVER_URL }}
-          GITEA_REPO: ${{ secrets.GITEA_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python tools/deep_scan.py
 
@@ -46,17 +40,12 @@ jobs:
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
             git push --set-upstream origin "$BRANCH"
 
-            REPO_FULL="${GITEA_REPO:-}"
-            if [ -z "$REPO_FULL" ]; then
-              REMOTE_URL=$(git remote get-url origin)
-              REPO_FULL=$(echo "$REMOTE_URL" | sed -E 's#.*[:/]{1,2}([^/]+/[^/]+)(\.git)?#\1#')
-            fi
-
-            API_URL="${GITEA_SERVER_URL}/api/v1/repos/${REPO_FULL}/pulls"
+            REPO_FULL="${GITHUB_REPOSITORY}"
+            API_URL="https://api.github.com/repos/${REPO_FULL}/pulls"
             PR_TITLE="DeepScan Autofix: automated fixes"
             PR_BODY="Automated fixes applied by DeepScan. Please review changes."
 
-            curl -s -X POST -H "Content-Type: application/json" -H "Authorization: token ${GITEA_TOKEN}" \
+            curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
               -d "{\"head\":\"${BRANCH}\",\"base\":\"main\",\"title\":\"${PR_TITLE}\",\"body\":\"${PR_BODY}\"}" \
               "${API_URL}"
           else
@@ -64,16 +53,14 @@ jobs:
           fi
 
   security_scan:
-    runs-on: docker
-    container:
-      image: python:3.10-slim
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install CodeQL prerequisites
         run: |
-          apt-get update && apt-get install -y curl unzip
+          sudo apt-get update && sudo apt-get install -y curl unzip
 
       - name: Run CodeQL CLI
         run: |
@@ -82,23 +69,23 @@ jobs:
 
       - name: Upload CodeQL SARIF
         if: always()
-        run: |
-          mkdir -p artifacts
-          mv codeql-results.sarif artifacts/ || true
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-sarif
+          path: codeql-results.sarif
 
   lint_and_docker:
-    runs-on: docker
-    container:
-      image: python:3.10-slim
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install linters and hadolint
         run: |
+          python -m pip install --upgrade pip
           pip install black flake8
-          wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-          chmod +x /usr/local/bin/hadolint
+          sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          sudo chmod +x /usr/local/bin/hadolint
 
       - name: Run linters
         run: |
