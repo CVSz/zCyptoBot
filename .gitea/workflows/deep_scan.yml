@@ -18,7 +18,7 @@ jobs:
 
       - name: Install system deps
         run: |
-          apt-get update && apt-get install -y git curl unzip
+          apt-get update && apt-get install -y git curl unzip jq
 
       - name: Install Python deps
         run: |
@@ -34,31 +34,40 @@ jobs:
           git config --global user.name "DeepScanBot"
           git config --global user.email "deepscan-bot@example.com"
 
-      - name: Run deep scan and apply fixes
+      - name: Run deep scan and apply fixes, push branch, open PR
         env:
           GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          GITEA_SERVER_URL: ${{ secrets.GITEA_SERVER_URL }}
-          GITEA_REPO: ${{ secrets.GITEA_REPO }}
+          GITEA_SERVER_URL: "https://git.zeaz.dev"
+          GITEA_REPO: "CVSz/zCyptoBot"
+          AUTOFIX_REVIEWERS: "alice,bob"
+          AUTOFIX_LABELS: "autofix,needs-review"
         run: |
+          set -euo pipefail
           python tools/deep_scan.py
 
           if [ -n "$(git status --porcelain)" ]; then
             BRANCH=$(git rev-parse --abbrev-ref HEAD)
             git push --set-upstream origin "$BRANCH"
 
-            REPO_FULL="${GITEA_REPO:-}"
-            if [ -z "$REPO_FULL" ]; then
-              REMOTE_URL=$(git remote get-url origin)
-              REPO_FULL=$(echo "$REMOTE_URL" | sed -E 's#.*[:/]{1,2}([^/]+/[^/]+)(\.git)?#\1#')
-            fi
-
+            REPO_FULL="${GITEA_REPO}"
             API_URL="${GITEA_SERVER_URL}/api/v1/repos/${REPO_FULL}/pulls"
             PR_TITLE="DeepScan Autofix: automated fixes"
             PR_BODY="Automated fixes applied by DeepScan. Please review changes."
 
+            ASSIGNEE="alice"
+            LABELS_JSON='["autofix","needs-review"]'
+
+            PAYLOAD=$(jq -n \
+              --arg head "$BRANCH" \
+              --arg base "main" \
+              --arg title "$PR_TITLE" \
+              --arg body "$PR_BODY" \
+              --arg assignee "$ASSIGNEE" \
+              --argjson labels "$LABELS_JSON" \
+              '{head:$head, base:$base, title:$title, body:$body, assignee:($assignee // null), labels:$labels}')
+
             curl -s -X POST -H "Content-Type: application/json" -H "Authorization: token ${GITEA_TOKEN}" \
-              -d "{\"head\":\"${BRANCH}\",\"base\":\"main\",\"title\":\"${PR_TITLE}\",\"body\":\"${PR_BODY}\"}" \
-              "${API_URL}"
+              -d "$PAYLOAD" "${API_URL}" | jq .
           else
             echo "No changes to commit."
           fi
@@ -79,7 +88,6 @@ jobs:
         run: |
           chmod +x tools/run_codeql.sh
           tools/run_codeql.sh
-
       - name: Upload CodeQL SARIF
         if: always()
         run: |
