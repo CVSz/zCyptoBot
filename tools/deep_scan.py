@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import ast
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -132,10 +133,17 @@ def rollback(commit_id: str) -> None:
 
 
 def update_changelog() -> None:
+    if not CHANGELOG.exists():
+        CHANGELOG.write_text(
+            "# Changelog\n\n## [Unreleased]\n\n## Automation Scan History\n",
+            encoding="utf-8",
+        )
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     with CHANGELOG.open("a", encoding="utf-8") as handle:
-        handle.write("\n## Autofix Release\n")
-        handle.write(f"- Bug report: {BUG_REPORT}\n")
-        handle.write("- Autofixes applied and committed.\n")
+        handle.write(f"\n### Deep Scan Run - {timestamp}\n")
+        handle.write(f"- Bug report generated: `{BUG_REPORT}`\n")
+        handle.write("- Autofix pass completed by `tools/deep_scan.py`.\n")
 
 
 def main() -> None:
