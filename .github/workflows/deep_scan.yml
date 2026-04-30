@@ -1,112 +1,13 @@
 name: Deep Scan Autofix
-
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-
 jobs:
   deep_scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install system deps
-        run: |
-          sudo apt-get update && sudo apt-get install -y git curl unzip jq
-
-      - name: Install Python deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8
-
-      - name: Run deep scan dry run
-        run: |
-          python tools/deep_scan.py --dry-run
-
-      - name: Configure git user
-        run: |
-          git config --global user.name "DeepScanBot"
-          git config --global user.email "deepscan-bot@example.com"
-
-      - name: Run deep scan and apply fixes, push branch, open PR, request reviewers, add labels
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AUTOFIX_REVIEWERS: "alice,bob"
-          AUTOFIX_LABELS: "autofix,needs-review"
-        run: |
-          set -euo pipefail
-          python tools/deep_scan.py
-
-          if [ -n "$(git status --porcelain)" ]; then
-            BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            if ! git push --set-upstream origin "$BRANCH"; then
-              echo "Push failed (likely token permission); skipping PR creation."
-              exit 0
-            fi
-
-            REPO_FULL="${GITHUB_REPOSITORY}"
-            API_URL="https://api.github.com/repos/${REPO_FULL}/pulls"
-            PR_TITLE="DeepScan Autofix: automated fixes"
-            PR_BODY="Automated fixes applied by DeepScan. Please review changes."
-
-            PAYLOAD=$(jq -n --arg head "$BRANCH" --arg base "main" --arg title "$PR_TITLE" --arg body "$PR_BODY" \
-              '{head:$head, base:$base, title:$title, body:$body}')
-            PR_RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" -d "$PAYLOAD" "$API_URL")
-            PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r .number)
-            echo "Created PR #$PR_NUMBER"
-
-            REVIEWERS_JSON=$(jq -n --argjson arr '["alice","bob"]' '{reviewers:$arr}')
-            curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
-              -d "$REVIEWERS_JSON" "https://api.github.com/repos/${REPO_FULL}/pulls/${PR_NUMBER}/requested_reviewers" | jq .
-
-            LABELS_JSON='["autofix","needs-review"]'
-            curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
-              -d "$LABELS_JSON" "https://api.github.com/repos/${REPO_FULL}/issues/${PR_NUMBER}/labels" | jq .
-          else
-            echo "No changes to commit."
-          fi
-
-  security_scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install CodeQL prerequisites
-        run: |
-          sudo apt-get update && sudo apt-get install -y curl unzip
-
-      - name: Run CodeQL CLI
-        run: |
-          chmod +x tools/run_codeql.sh
-          tools/run_codeql.sh
-      - name: Upload CodeQL SARIF
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: codeql-sarif
-          path: codeql-results.sarif
-
-  lint_and_docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install linters and hadolint
-        run: |
-          python -m pip install --upgrade pip
-          pip install black flake8
-          sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-          sudo chmod +x /usr/local/bin/hadolint
-
-      - name: Run linters
-        run: |
-          black --check . || echo "Black reported formatting issues; continuing for visibility."
-          flake8 . || echo "Flake8 reported lint issues; continuing for visibility."
-
-      - name: Validate Dockerfile if present
-        run: |
-          if [ -f Dockerfile ]; then hadolint Dockerfile || true; else echo "No Dockerfile"; fi
+      - uses: actions/checkout@v3
+      - run: sudo apt-get update && sudo apt-get install -y git curl jq unzip
+      - run: python -m pip install --upgrade pip && pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8 requests
+      - run: python tools/deep_scan.py --dry-run

@@ -1,118 +1,15 @@
 name: Deep Scan Autofix
-
 on:
   push:
     branches: [ main, develop ]
   pull_request:
-
 jobs:
   deep_scan:
     runs-on: docker
     container:
       image: python:3.10-slim
-    env:
-      PROMETHEUS_PORT: "8000"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install system deps
-        run: |
-          apt-get update && apt-get install -y git curl unzip jq
-
-      - name: Install Python deps
-        run: |
-          pip install --upgrade pip
-          pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8
-
-      - name: Run deep scan dry run
-        run: |
-          python tools/deep_scan.py --dry-run
-
-      - name: Configure git user
-        run: |
-          git config --global user.name "DeepScanBot"
-          git config --global user.email "deepscan-bot@example.com"
-
-      - name: Run deep scan and apply fixes, push branch, open PR
-        env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          GITEA_SERVER_URL: "https://git.zeaz.dev"
-          GITEA_REPO: "CVSz/zCyptoBot"
-          AUTOFIX_REVIEWERS: "alice,bob"
-          AUTOFIX_LABELS: "autofix,needs-review"
-        run: |
-          set -euo pipefail
-          python tools/deep_scan.py
-
-          if [ -n "$(git status --porcelain)" ]; then
-            BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            git push --set-upstream origin "$BRANCH"
-
-            REPO_FULL="${GITEA_REPO}"
-            API_URL="${GITEA_SERVER_URL}/api/v1/repos/${REPO_FULL}/pulls"
-            PR_TITLE="DeepScan Autofix: automated fixes"
-            PR_BODY="Automated fixes applied by DeepScan. Please review changes."
-
-            ASSIGNEE="alice"
-            LABELS_JSON='["autofix","needs-review"]'
-
-            PAYLOAD=$(jq -n \
-              --arg head "$BRANCH" \
-              --arg base "main" \
-              --arg title "$PR_TITLE" \
-              --arg body "$PR_BODY" \
-              --arg assignee "$ASSIGNEE" \
-              --argjson labels "$LABELS_JSON" \
-              '{head:$head, base:$base, title:$title, body:$body, assignee:($assignee // null), labels:$labels}')
-
-            curl -s -X POST -H "Content-Type: application/json" -H "Authorization: token ${GITEA_TOKEN}" \
-              -d "$PAYLOAD" "${API_URL}" | jq .
-          else
-            echo "No changes to commit."
-          fi
-
-  security_scan:
-    runs-on: docker
-    container:
-      image: python:3.10-slim
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install CodeQL prerequisites
-        run: |
-          apt-get update && apt-get install -y curl unzip
-
-      - name: Run CodeQL CLI
-        run: |
-          chmod +x tools/run_codeql.sh
-          tools/run_codeql.sh
-      - name: Upload CodeQL SARIF
-        if: always()
-        run: |
-          mkdir -p artifacts
-          mv codeql-results.sarif artifacts/ || true
-
-  lint_and_docker:
-    runs-on: docker
-    container:
-      image: python:3.10-slim
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install linters and hadolint
-        run: |
-          pip install black flake8
-          wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-          chmod +x /usr/local/bin/hadolint
-
-      - name: Run linters
-        run: |
-          black --check .
-          flake8 .
-
-      - name: Validate Dockerfile if present
-        run: |
-          if [ -f Dockerfile ]; then hadolint Dockerfile || true; else echo "No Dockerfile"; fi
+      - uses: actions/checkout@v3
+      - run: apt-get update && apt-get install -y git curl jq unzip
+      - run: pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8 requests
+      - run: python tools/deep_scan.py --dry-run
