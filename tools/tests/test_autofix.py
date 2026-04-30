@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 import sys
+import ast
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT / "tools") not in sys.path:
@@ -20,7 +21,19 @@ def _reset_workspace(tmp_root: Path) -> Path:
     return repo_root
 
 
+class _AstorShim:
+    @staticmethod
+    def to_source(tree):
+        return ast.unparse(tree) + "\n"
+
+
+def _ensure_astor(monkeypatch):
+    if ds.astor is None:
+        monkeypatch.setattr(ds, "astor", _AstorShim)
+
+
 def test_random_rewrite_and_backup(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
     repo_root = _reset_workspace(tmp_path)
     monkeypatch.setattr(ds, "REPO_DIR", repo_root)
     monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
@@ -39,6 +52,7 @@ def test_random_rewrite_and_backup(tmp_path, monkeypatch):
 
 
 def test_return_semantics_preserved_after_wrap(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
     repo_root = _reset_workspace(tmp_path)
     monkeypatch.setattr(ds, "REPO_DIR", repo_root)
     monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
@@ -56,6 +70,7 @@ def test_return_semantics_preserved_after_wrap(tmp_path, monkeypatch):
 
 
 def test_async_function_not_wrapped(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
     repo_root = _reset_workspace(tmp_path)
     monkeypatch.setattr(ds, "REPO_DIR", repo_root)
     monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
@@ -71,6 +86,7 @@ def test_async_function_not_wrapped(tmp_path, monkeypatch):
 
 
 def test_generator_function_not_wrapped(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
     repo_root = _reset_workspace(tmp_path)
     monkeypatch.setattr(ds, "REPO_DIR", repo_root)
     monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
@@ -83,3 +99,57 @@ def test_generator_function_not_wrapped(tmp_path, monkeypatch):
     rewritten = py_file.read_text(encoding="utf-8")
     assert "yield 1" in rewritten
     assert "try:" not in rewritten
+
+
+def test_decorated_function_still_executes(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
+    repo_root = _reset_workspace(tmp_path)
+    monkeypatch.setattr(ds, "REPO_DIR", repo_root)
+    monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
+
+    py_file = repo_root / "decorated.py"
+    py_file.write_text(
+        "def deco(fn):\n"
+        "    def wrapper(*args, **kwargs):\n"
+        "        return fn(*args, **kwargs)\n"
+        "    return wrapper\n\n"
+        "@deco\n"
+        "def value(x):\n"
+        "    return x + 10\n",
+        encoding="utf-8",
+    )
+
+    ds.ast_autofix_file(py_file)
+    namespace = {}
+    exec(py_file.read_text(encoding="utf-8"), namespace)
+    assert namespace["value"](5) == 15
+
+
+def test_wildcard_import_replacement_preserves_runtime(tmp_path, monkeypatch):
+    _ensure_astor(monkeypatch)
+    repo_root = _reset_workspace(tmp_path)
+    monkeypatch.setattr(ds, "REPO_DIR", repo_root)
+    monkeypatch.setattr(ds, "BACKUP_DIR", tmp_path / ".deepscan_backup")
+
+    helper = repo_root / "helper_mod.py"
+    helper.write_text(
+        "from math import sqrt\n\n"
+        "def root_four():\n"
+        "    return sqrt(4)\n",
+        encoding="utf-8",
+    )
+    py_file = repo_root / "wildcard.py"
+    py_file.write_text(
+        "from helper_mod import *\n\n"
+        "def use_helper():\n"
+        "    return root_four()\n",
+        encoding="utf-8",
+    )
+
+    ds.ast_autofix_file(py_file)
+    rewritten = py_file.read_text(encoding="utf-8")
+    assert "TODO: replace wildcard import from helper_mod" in rewritten
+    namespace = {}
+    exec(helper.read_text(encoding="utf-8"), namespace)
+    exec(rewritten, namespace)
+    assert namespace["use_helper"]() == 2.0
