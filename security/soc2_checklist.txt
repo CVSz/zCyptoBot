@@ -1,0 +1,9 @@
+SOC2 Checklist (Production)
+
+[ ] RBAC + SSO
+[ ] Encryption (TLS + AES)
+[ ] Audit logs (immutable)
+[ ] Monitoring (SLO alerts)
+[ ] Backup + DR
+[ ] Incident response runbook
+[ ] Vendor risk assessment
