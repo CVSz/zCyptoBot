@@ -1,0 +1,8 @@
+issuer: https://dex.example.com
+
+connectors:
+  - type: oidc
+    id: upstream
+    name: Upstream
+    config:
+      issuer: https://idp.example.com

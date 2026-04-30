@@ -1,0 +1,6 @@
+[
+  {"name": "valid", "expected": "pass"},
+  {"name": "expired", "expected": "fail"},
+  {"name": "tampered", "expected": "fail"},
+  {"name": "revoked", "expected": "fail"}
+]

@@ -1,0 +1,6 @@
+istio:
+  enabled: true
+spiffe:
+  enabled: true
+oidc:
+  enabled: true

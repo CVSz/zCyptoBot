@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gid-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gid-app
+  template:
+    metadata:
+      labels:
+        app: gid-app
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/example/gid-app:latest
+          ports:
+            - containerPort: 8080
