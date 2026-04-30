@@ -1,0 +1,5 @@
+Identity (principal)
+ + Attestation (device/workload)
+ + Transport (mTLS-bound)
+ + Policy (tenant/SLO/budget)
+ = Access decision (portable, verifiable)
