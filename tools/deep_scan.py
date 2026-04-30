@@ -2,110 +2,139 @@
 """
 tools/deep_scan.py
 
-End-to-end deep scan, semantic analysis, and safe autofix engine for zCyptoBot.
-
-Features:
-- Clone or use local repo
-- AST parsing and safe AST-based edits
-- Semantic embeddings for functions/classes
-- Dependency and call graph construction (networkx)
-- Anomaly detection (IsolationForest)
-- Autofix engine for common issues (weak RNG, wildcard imports, missing try/except)
-- Prometheus metrics endpoint
-- Markdown bug report and semantic graph JSON output
-- Safe git branch/commit/push workflow with rollback support
-- Hooks for bandit, flake8, CodeQL (placeholders)
+Hardened deep scan and safe autofix engine for zCyptoBot.
 """
 
+from __future__ import annotations
+
+import argparse
 import ast
+from dataclasses import dataclass
 from datetime import UTC, datetime
 import json
 import logging
-import subprocess
-import uuid
+import os
 from pathlib import Path
+import shutil
+import subprocess
 from typing import Any, Dict, List, Tuple
+import uuid
 
-import astor
 import networkx as nx
-from prometheus_client import Counter, start_http_server
-from sentence_transformers import SentenceTransformer
-from sklearn.ensemble import IsolationForest
+import requests
 
-# -------------------------
-# Configuration
-# -------------------------
-REPO_URL = "https://github.com/CVSz/zCyptoBot.git"
-REPO_DIR = Path("zCyptoBot")
+try:
+    import astor
+except Exception:
+    astor = None
+
+try:
+    from sentence_transformers import SentenceTransformer
+    from sklearn.ensemble import IsolationForest
+except Exception:
+    SentenceTransformer = None
+    IsolationForest = None
+
+try:
+    from prometheus_client import Counter, start_http_server
+except Exception:
+    Counter = None
+    start_http_server = None
+
+REPO_URL = os.environ.get("REPO_URL", "https://github.com/CVSz/zCyptoBot.git")
+REPO_DIR = Path(os.environ.get("REPO_DIR", "zCyptoBot"))
 BUG_REPORT = Path("bug_report.md")
 GRAPH_JSON = Path("semantic_graph.json")
 CHANGELOG = Path("CHANGELOG.md")
-EMBED_MODEL = "all-MiniLM-L6-v2"
-PROMETHEUS_PORT = 8000
+EMBED_MODEL = os.environ.get("EMBED_MODEL", "all-MiniLM-L6-v2")
+PROMETHEUS_PORT = int(os.environ.get("PROMETHEUS_PORT", "8000"))
 AUTOFIX_BRANCH_PREFIX = "deepscan/autofix/"
-GIT_USER_NAME = "DeepScanBot"
-GIT_USER_EMAIL = "deepscan-bot@example.com"
-ANOMALY_CONTAMINATION = 0.08
-LOG_LEVEL = logging.INFO
+ANOMALY_CONTAMINATION = float(os.environ.get("ANOMALY_CONTAMINATION", "0.08"))
+MIN_ENTITIES_FOR_ANOMALY = int(os.environ.get("MIN_ENTITIES_FOR_ANOMALY", "10"))
+BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", ".deepscan_backup"))
 
-bug_counter = Counter("zcyptobot_bug_detected", "Number of bugs detected by deep_scan")
-fix_counter = Counter("zcyptobot_autofix_applied", "Number of autofixes applied by deep_scan")
+if Counter:
+    bug_counter = Counter("zcyptobot_bug_detected", "Number of bugs detected by deep_scan")
+    fix_counter = Counter("zcyptobot_autofix_applied", "Number of autofixes applied by deep_scan")
+else:
+    bug_counter = None
+    fix_counter = None
 
-logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("deep_scan")
 
 
 def run(cmd: List[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
-    logger.debug("Running command: %s", " ".join(cmd))
     return subprocess.run(cmd, cwd=cwd, check=check, text=True, capture_output=True)
 
 
 def safe_clone_or_pull() -> None:
     if REPO_DIR.exists():
-        logger.info("Repository exists locally, fetching latest")
         try:
             run(["git", "fetch", "--all"], cwd=REPO_DIR)
             run(["git", "reset", "--hard", "origin/main"], cwd=REPO_DIR)
         except Exception as exc:
             logger.warning("Failed to update local repo: %s", exc)
     else:
-        logger.info("Cloning repository %s", REPO_URL)
         run(["git", "clone", REPO_URL, str(REPO_DIR)])
 
 
 def git_configure() -> None:
-    run(["git", "config", "--global", "user.name", GIT_USER_NAME])
-    run(["git", "config", "--global", "user.email", GIT_USER_EMAIL])
+    run(["git", "config", "--global", "user.name", os.environ.get("GIT_USER_NAME", "DeepScanBot")])
+    run(["git", "config", "--global", "user.email", os.environ.get("GIT_USER_EMAIL", "deepscan-bot@example.com")])
 
 
 def create_autofix_branch() -> str:
     branch = AUTOFIX_BRANCH_PREFIX + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
     run(["git", "checkout", "-b", branch], cwd=REPO_DIR)
-    logger.info("Created branch %s", branch)
     return branch
 
 
-def push_branch(branch: str) -> None:
+def commit_changes(message: str) -> bool:
+    status = run(["git", "status", "--porcelain"], cwd=REPO_DIR, check=False)
+    if not status.stdout.strip():
+        logger.info("No changes to commit")
+        return False
+    run(["git", "add", "."], cwd=REPO_DIR)
+    run(["git", "commit", "-m", message], cwd=REPO_DIR)
+    return True
+
+
+def push_branch(branch: str) -> bool:
+    token = os.environ.get("GIT_PUSH_TOKEN")
+    if not token:
+        logger.warning("GIT_PUSH_TOKEN not set; skipping push")
+        return False
+    origin_url = run(["git", "remote", "get-url", "origin"], cwd=REPO_DIR).stdout.strip()
+    if origin_url.startswith("https://"):
+        auth_url = origin_url.replace("https://", f"https://{token}@")
+        run(["git", "remote", "set-url", "origin", auth_url], cwd=REPO_DIR)
     run(["git", "push", "--set-upstream", "origin", branch], cwd=REPO_DIR)
-    logger.info("Pushed branch %s", branch)
+    return True
 
 
-def commit_changes(message: str) -> None:
-    try:
-        run(["git", "add", "."], cwd=REPO_DIR)
-        run(["git", "commit", "-m", message], cwd=REPO_DIR)
-        logger.info("Committed changes: %s", message)
-    except subprocess.CalledProcessError as exc:
-        logger.info("No changes to commit or commit failed: %s", exc)
+def create_gitea_pr(server_url: str, repo_full: str, branch: str, title: str, body: str, token: str, assignee: str | None = None, labels: List[str] | None = None) -> dict[str, Any] | None:
+    api = f"{server_url.rstrip('/')}/api/v1/repos/{repo_full}/pulls"
+    payload: dict[str, Any] = {"head": branch, "base": "main", "title": title, "body": body}
+    if assignee:
+        payload["assignee"] = assignee
+    if labels:
+        payload["labels"] = labels
+    headers = {"Authorization": f"token {token}", "Content-Type": "application/json"}
+    resp = requests.post(api, json=payload, headers=headers, timeout=30)
+    if resp.status_code not in (200, 201):
+        logger.error("Failed to create PR: %s %s", resp.status_code, resp.text)
+        return None
+    return resp.json()
 
 
+@dataclass
 class CodeEntity:
-    def __init__(self, path: Path, node: ast.AST, name: str, lineno: int, source_line: str):
-        self.path = path
-        self.node = node
-        self.name = name
-        self.lineno = lineno
-        self.source_line = source_line
+    path: Path
+    node: ast.AST
+    name: str
+    lineno: int
+    source_line: str
 
 
 def collect_python_entities(repo_path: Path) -> Tuple[List[CodeEntity], Dict[Path, str]]:
@@ -123,145 +152,97 @@ def collect_python_entities(repo_path: Path) -> Tuple[List[CodeEntity], Dict[Pat
                     entities.append(CodeEntity(py, node, node.name, node.lineno, line.strip()))
         except Exception as exc:
             logger.warning("Failed to parse %s: %s", py, exc)
-    logger.info("Collected %d code entities", len(entities))
     return entities, file_contents
 
 
-def build_embeddings(entities: List[CodeEntity], model_name: str):
-    model = SentenceTransformer(model_name)
-    texts = [f"{e.path.name}:{e.name} {e.source_line}" for e in entities]
-    embeddings = model.encode(texts, show_progress_bar=False)
-    return embeddings, texts
+def safe_backup_file(path: Path) -> None:
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    rel = path.relative_to(REPO_DIR)
+    dest = BACKUP_DIR / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, dest)
 
 
-def build_dependency_graph(entities: List[CodeEntity], file_contents: Dict[Path, str]) -> nx.DiGraph:
-    graph = nx.DiGraph()
-    for entity in entities:
-        node_id = f"{entity.path.relative_to(REPO_DIR)}:{entity.name}:{entity.lineno}"
-        graph.add_node(node_id, file=str(entity.path), name=entity.name, lineno=entity.lineno)
-
-    name_to_nodes: Dict[str, List[str]] = {}
-    for node_id, attrs in graph.nodes(data=True):
-        name_to_nodes.setdefault(attrs["name"], []).append(node_id)
-
-    for entity in entities:
-        src = f"{entity.path.relative_to(REPO_DIR)}:{entity.name}:{entity.lineno}"
-        content = file_contents.get(entity.path, "")
-        for callee_name, targets in name_to_nodes.items():
-            if callee_name != entity.name and f"{callee_name}(" in content:
-                for tgt in targets:
-                    graph.add_edge(src, tgt)
-    return graph
-
-
-def detect_static_issues(entity: CodeEntity) -> List[Dict[str, Any]]:
-    issues: List[Dict[str, Any]] = []
-    line = entity.source_line
-    if "random.random()" in line or "random.randint(" in line or "random.choice(" in line:
-        issues.append({"type": "weak_rng", "message": "Use secrets for cryptographic randomness", "severity": "High"})
-    if "import *" in line:
-        issues.append({"type": "wildcard_import", "message": "Avoid wildcard imports", "severity": "Medium"})
-    has_try = any(isinstance(node, ast.Try) for node in ast.walk(entity.node))
-    if isinstance(entity.node, ast.FunctionDef) and not has_try:
-        issues.append({"type": "missing_try", "message": "Function has no try/except", "severity": "Low"})
-    if "hashlib.md5" in line or "sha1" in line:
-        issues.append({"type": "weak_hash", "message": "Use SHA256 or better", "severity": "High"})
-    return issues
-
-
-def autofix_entity(entity: CodeEntity) -> List[str]:
+def ast_autofix_file(path: Path) -> List[str]:
+    if astor is None:
+        return []
     applied: List[str] = []
-    path = entity.path
-    try:
-        src = path.read_text(encoding="utf-8")
-        tree = ast.parse(src)
-        modified = False
+    src = path.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    modified = False
 
-        class Transformer(ast.NodeTransformer):
-            def visit_ImportFrom(self, node):
-                nonlocal modified
-                if node.names and node.names[0].name == "*":
+    class Fixer(ast.NodeTransformer):
+        def visit_ImportFrom(self, node: ast.ImportFrom):
+            nonlocal modified
+            if any(n.name == "*" for n in node.names):
+                modified = True
+                return ast.copy_location(
+                    ast.Expr(value=ast.Constant(value=f"TODO: replace wildcard import from {node.module} with explicit names")),
+                    node,
+                )
+            return node
+
+        def visit_Call(self, node: ast.Call):
+            nonlocal modified
+            if isinstance(node.func, ast.Attribute):
+                if getattr(node.func.value, "id", "") == "random" and node.func.attr in ("random", "randint", "choice"):
                     modified = True
-                    return ast.copy_location(
-                        ast.Expr(value=ast.Constant(value=f"# TODO: replace wildcard import from {node.module} with explicit names")),
-                        node,
+                    return ast.copy_location(ast.parse("secrets.token_hex(16)").body[0].value, node)
+            return self.generic_visit(node)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            nonlocal modified
+            has_yield = any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node))
+            has_try = any(isinstance(n, ast.Try) for n in node.body)
+            if not has_yield and not has_try:
+                modified = True
+                node.body = [
+                    ast.Try(
+                        body=node.body,
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=ast.Name(id="Exception", ctx=ast.Load()),
+                                name="e",
+                                body=[ast.parse("import logging").body[0], ast.parse("logging.exception('DeepScan caught exception: %s', e)").body[0], ast.Raise()],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
                     )
-                return node
+                ]
+            return node
 
-            def visit_Call(self, node):
-                nonlocal modified
-                if isinstance(node.func, ast.Attribute):
-                    if getattr(node.func.value, "id", "") == "random" and node.func.attr in ("random", "randint", "choice"):
-                        modified = True
-                        return ast.copy_location(ast.parse("secrets.token_hex(16)").body[0].value, node)
-                return self.generic_visit(node)
-
-            def visit_FunctionDef(self, node):
-                nonlocal modified
-                has_try_stmt = any(isinstance(n, ast.Try) for n in node.body)
-                if not has_try_stmt:
-                    modified = True
-                    node.body = [
-                        ast.Try(
-                            body=node.body,
-                            handlers=[
-                                ast.ExceptHandler(
-                                    type=ast.Name(id="Exception", ctx=ast.Load()),
-                                    name="e",
-                                    body=[
-                                        ast.parse("import logging").body[0],
-                                        ast.parse("logging.exception('autofix caught exception: %s', e)").body[0],
-                                    ],
-                                )
-                            ],
-                            orelse=[],
-                            finalbody=[],
-                        )
-                    ]
-                return node
-
-        new_tree = Transformer().visit(tree)
-        if modified:
-            path.write_text(astor.to_source(new_tree), encoding="utf-8")
-            applied.append(f"AST autofix applied to {path}")
-    except Exception as exc:
-        logger.exception("Autofix failed for %s: %s", path, exc)
+    new_tree = Fixer().visit(tree)
+    ast.fix_missing_locations(new_tree)
+    if modified:
+        safe_backup_file(path)
+        path.write_text(astor.to_source(new_tree), encoding="utf-8")
+        applied.append(f"AST autofix applied to {path}")
     return applied
 
 
-def detect_anomalies_with_embeddings(embeddings, texts) -> List[int]:
-    if len(embeddings) < 3:
+def build_embeddings(entities: List[CodeEntity]):
+    if SentenceTransformer is None:
+        return None
+    model = SentenceTransformer(EMBED_MODEL)
+    texts = [f"{e.path.name}:{e.name} {e.source_line}" for e in entities]
+    embeddings = []
+    for i in range(0, len(texts), 64):
+        embeddings.extend(model.encode(texts[i : i + 64], show_progress_bar=False))
+    return embeddings
+
+
+def detect_anomalies(embeddings) -> List[int]:
+    if embeddings is None or IsolationForest is None or len(embeddings) < MIN_ENTITIES_FOR_ANOMALY:
         return []
     clf = IsolationForest(contamination=ANOMALY_CONTAMINATION, random_state=42)
-    preds = clf.fit_predict(embeddings)
-    return [i for i, pred in enumerate(preds) if pred == -1]
-
-
-def run_bandit(repo_dir: Path) -> Tuple[bool, str]:
-    try:
-        res = run(["bandit", "-r", "."], cwd=repo_dir)
-        return True, res.stdout + res.stderr
-    except Exception as exc:
-        return False, str(exc)
-
-
-def run_flake8(repo_dir: Path) -> Tuple[bool, str]:
-    try:
-        res = run(["flake8", "."], cwd=repo_dir)
-        return True, res.stdout + res.stderr
-    except Exception as exc:
-        return False, str(exc)
+    return [i for i, p in enumerate(clf.fit_predict(embeddings)) if p == -1]
 
 
 def write_bug_report(issues: List[Dict[str, Any]]) -> None:
-    lines = [
-        "| File | Line | Entity | Issue | Severity | Suggested Fix |",
-        "|------|------|--------|-------|----------|---------------|",
-    ]
+    lines = ["| File | Line | Entity | Issue | Severity | Suggested Fix |", "|------|------|--------|-------|----------|---------------|"]
     for issue in issues:
-        lines.append(
-            f"| {issue['file']} | {issue['line']} | {issue['entity']} | {issue['message']} | {issue['severity']} | {issue.get('fix', 'manual review')} |"
-        )
+        lines.append(f"| {issue['file']} | {issue['line']} | {issue['entity']} | {issue['message']} | {issue['severity']} | {issue.get('fix', 'manual review')} |")
     BUG_REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -271,87 +252,70 @@ def write_graph_json(graph: nx.DiGraph) -> None:
 
 def append_changelog(entry: str) -> None:
     ts = datetime.now(UTC).isoformat().replace("+00:00", "Z")
-    content = f"## {ts} - DeepScan Autofix\n\n{entry}\n\n"
+    block = f"## {ts} - DeepScan Autofix\n\n{entry}\n\n"
     if CHANGELOG.exists():
-        CHANGELOG.write_text(CHANGELOG.read_text(encoding="utf-8") + "\n" + content, encoding="utf-8")
+        CHANGELOG.write_text(CHANGELOG.read_text(encoding="utf-8") + "\n" + block, encoding="utf-8")
     else:
-        CHANGELOG.write_text("# Changelog\n\n" + content, encoding="utf-8")
+        CHANGELOG.write_text("# Changelog\n\n" + block, encoding="utf-8")
 
 
-def main(dry_run: bool = False, push_branch_flag: bool = False) -> None:
-    start_http_server(PROMETHEUS_PORT)
-    logger.info("Prometheus metrics available on port %d", PROMETHEUS_PORT)
+def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool) -> int:
+    if not no_metrics and start_http_server and Counter:
+        start_http_server(PROMETHEUS_PORT)
 
     safe_clone_or_pull()
     git_configure()
-
     entities, file_contents = collect_python_entities(REPO_DIR)
-    embeddings, texts = build_embeddings(entities, EMBED_MODEL)
+    embeddings = build_embeddings(entities)
 
-    graph = build_dependency_graph(entities, file_contents)
+    graph = nx.DiGraph()
+    for entity in entities:
+        node_id = f"{entity.path.relative_to(REPO_DIR)}:{entity.name}:{entity.lineno}"
+        graph.add_node(node_id, file=str(entity.path), name=entity.name, lineno=entity.lineno)
     write_graph_json(graph)
 
     issues: List[Dict[str, Any]] = []
     for entity in entities:
-        for static_issue in detect_static_issues(entity):
-            issues.append(
-                {
-                    "file": str(entity.path.relative_to(REPO_DIR)),
-                    "line": entity.lineno,
-                    "entity": entity.name,
-                    "type": static_issue["type"],
-                    "message": static_issue["message"],
-                    "severity": static_issue["severity"],
-                    "fix": None,
-                }
-            )
+        line = entity.source_line
+        if "random.random" in line or "random.randint(" in line or "random.choice(" in line:
+            issues.append({"file": str(entity.path.relative_to(REPO_DIR)), "line": entity.lineno, "entity": entity.name, "message": "Weak RNG usage", "severity": "High", "fix": "Replace with secrets"})
+        if "import *" in line:
+            issues.append({"file": str(entity.path.relative_to(REPO_DIR)), "line": entity.lineno, "entity": entity.name, "message": "Wildcard import", "severity": "Medium", "fix": "Replace with explicit imports"})
+        if "hashlib.md5" in line or "sha1" in line:
+            issues.append({"file": str(entity.path.relative_to(REPO_DIR)), "line": entity.lineno, "entity": entity.name, "message": "Weak hash usage", "severity": "High", "fix": "Use SHA256+"})
 
-    for idx in detect_anomalies_with_embeddings(embeddings, texts):
-        anomaly = entities[idx]
-        issues.append(
-            {
-                "file": str(anomaly.path.relative_to(REPO_DIR)),
-                "line": anomaly.lineno,
-                "entity": anomaly.name,
-                "type": "semantic_anomaly",
-                "message": "Semantic anomaly detected by embedding model",
-                "severity": "Medium",
-                "fix": "manual review or targeted refactor",
-            }
-        )
-        bug_counter.inc()
+    for idx in detect_anomalies(embeddings):
+        e = entities[idx]
+        issues.append({"file": str(e.path.relative_to(REPO_DIR)), "line": e.lineno, "entity": e.name, "message": "Semantic anomaly", "severity": "Medium", "fix": "Manual review"})
 
     write_bug_report(issues)
-
     if dry_run:
-        logger.info("Dry run enabled; exiting before applying fixes")
-        return
+        return 0
 
     branch = create_autofix_branch()
     applied_fixes: List[str] = []
-    for entity in entities:
-        applied = autofix_entity(entity)
-        if applied:
-            applied_fixes.extend(applied)
-            fix_counter.inc()
+    for py in {e.path for e in entities}:
+        applied_fixes.extend(ast_autofix_file(py))
 
-    _, bandit_out = run_bandit(REPO_DIR)
-    _, flake_out = run_flake8(REPO_DIR)
-    logger.info("Bandit output length %d, Flake8 output length %d", len(bandit_out), len(flake_out))
+    committed = commit_changes(f"DeepScan autofix: applied {len(applied_fixes)} fixes") if applied_fixes else False
+    if committed and push:
+        pushed = push_branch(branch)
+        if pushed and pr_create:
+            token = os.environ.get("GITEA_TOKEN")
+            gitea_url = os.environ.get("GITEA_SERVER_URL")
+            gitea_repo = os.environ.get("GITEA_REPO")
+            if token and gitea_url and gitea_repo:
+                create_gitea_pr(gitea_url, gitea_repo, branch, "DeepScan Autofix: automated fixes", "Automated fixes applied by DeepScan.", token, os.environ.get("AUTOFIX_ASSIGNEE"), os.environ.get("AUTOFIX_LABELS", "").split(",") if os.environ.get("AUTOFIX_LABELS") else None)
 
-    commit_changes(f"DeepScan autofix: applied {len(applied_fixes)} fixes")
-    if push_branch_flag:
-        push_branch(branch)
-
-    changelog_entry = f"- Applied fixes: {len(applied_fixes)}\n- Issues found: {len(issues)}\n- Bandit issues: {len(bandit_out)}\n"
-    append_changelog(changelog_entry)
+    append_changelog(f"- Issues found: {len(issues)}\n- Fixes applied: {len(applied_fixes)}")
+    return 0
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Deep scan and autofix for zCyptoBot")
-    parser.add_argument("--dry-run", action="store_true", help="Do not apply fixes or commit")
-    parser.add_argument("--push", action="store_true", help="Push autofix branch to origin")
+    parser = argparse.ArgumentParser(description="Deep scan and safe autofix for zCyptoBot")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--push", action="store_true")
+    parser.add_argument("--pr-create", action="store_true")
+    parser.add_argument("--no-metrics", action="store_true")
     args = parser.parse_args()
-    main(dry_run=args.dry_run, push_branch_flag=args.push)
+    raise SystemExit(main(args.dry_run, args.push, args.pr_create, args.no_metrics))
