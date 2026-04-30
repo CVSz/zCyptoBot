@@ -1,18 +1,1 @@
-{
-  "extends": ["config:base"],
-  "automerge": false,
-  "platform": "gitea",
-  "dependencyDashboard": true,
-  "packageRules": [
-    {
-      "matchPackagePatterns": ["^sentence-transformers", "^scikit-learn", "^networkx", "^prometheus-client", "^astor", "^bandit", "^flake8"],
-      "groupName": "python-dependencies",
-      "schedule": ["at any time"]
-    }
-  ],
-  "pip_requirements": {
-    "fileMatch": ["(^|/)requirements.txt$"]
-  },
-  "prConcurrentLimit": 5,
-  "timezone": "UTC"
-}
+{"extends":["config:base"],"platform":"gitea","dependencyDashboard":true,"prConcurrentLimit":5,"timezone":"UTC"}
