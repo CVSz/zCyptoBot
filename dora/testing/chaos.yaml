@@ -1,0 +1,12 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: eu-latency
+spec:
+  action: delay
+  mode: all
+  selector:
+    labelSelectors:
+      region: eu
+  delay:
+    latency: "200ms"
