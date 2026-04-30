@@ -7,7 +7,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": null,
+      "datasource": "MainPrometheus",
       "fieldConfig": { "defaults": { "unit": "short" } },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "id": 2,
@@ -20,7 +20,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": null,
+      "datasource": "MainPrometheus",
       "fieldConfig": { "defaults": { "unit": "short" } },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "id": 4,
@@ -30,7 +30,7 @@
       "type": "stat"
     },
     {
-      "datasource": null,
+      "datasource": "MainPrometheus",
       "fieldConfig": { "defaults": { "unit": "short" } },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "id": 6,
@@ -40,7 +40,7 @@
       "type": "stat"
     },
     {
-      "datasource": null,
+      "datasource": "MainPrometheus",
       "fieldConfig": { "defaults": { "unit": "short" } },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "id": 8,

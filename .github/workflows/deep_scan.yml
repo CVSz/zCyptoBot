@@ -14,7 +14,7 @@ jobs:
 
       - name: Install system deps
         run: |
-          sudo apt-get update && sudo apt-get install -y git curl unzip
+          sudo apt-get update && sudo apt-get install -y git curl unzip jq
 
       - name: Install Python deps
         run: |
@@ -30,10 +30,13 @@ jobs:
           git config --global user.name "DeepScanBot"
           git config --global user.email "deepscan-bot@example.com"
 
-      - name: Run deep scan and apply fixes
+      - name: Run deep scan and apply fixes, push branch, open PR, request reviewers, add labels
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTOFIX_REVIEWERS: "alice,bob"
+          AUTOFIX_LABELS: "autofix,needs-review"
         run: |
+          set -euo pipefail
           python tools/deep_scan.py
 
           if [ -n "$(git status --porcelain)" ]; then
@@ -45,9 +48,19 @@ jobs:
             PR_TITLE="DeepScan Autofix: automated fixes"
             PR_BODY="Automated fixes applied by DeepScan. Please review changes."
 
+            PAYLOAD=$(jq -n --arg head "$BRANCH" --arg base "main" --arg title "$PR_TITLE" --arg body "$PR_BODY" \
+              '{head:$head, base:$base, title:$title, body:$body}')
+            PR_RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" -d "$PAYLOAD" "$API_URL")
+            PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r .number)
+            echo "Created PR #$PR_NUMBER"
+
+            REVIEWERS_JSON=$(jq -n --argjson arr '["alice","bob"]' '{reviewers:$arr}')
             curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
-              -d "{\"head\":\"${BRANCH}\",\"base\":\"main\",\"title\":\"${PR_TITLE}\",\"body\":\"${PR_BODY}\"}" \
-              "${API_URL}"
+              -d "$REVIEWERS_JSON" "https://api.github.com/repos/${REPO_FULL}/pulls/${PR_NUMBER}/requested_reviewers" | jq .
+
+            LABELS_JSON='["autofix","needs-review"]'
+            curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
+              -d "$LABELS_JSON" "https://api.github.com/repos/${REPO_FULL}/issues/${PR_NUMBER}/labels" | jq .
           else
             echo "No changes to commit."
           fi
@@ -66,7 +79,6 @@ jobs:
         run: |
           chmod +x tools/run_codeql.sh
           tools/run_codeql.sh
-
       - name: Upload CodeQL SARIF
         if: always()
         uses: actions/upload-artifact@v4
