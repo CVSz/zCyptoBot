@@ -1,0 +1,4 @@
+[
+  {"event": "login", "user": "admin", "ts": 123456},
+  {"event": "data_access", "region": "eu", "ts": 123457}
+]

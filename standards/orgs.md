@@ -1,0 +1,5 @@
+- ISO / IEC (security + governance)
+- ETSI (EU telecom + cloud standards)
+- GAIA-X (EU data sovereignty)
+- CNCF (cloud-native)
+- OASIS (data standards)

@@ -1,0 +1,3 @@
+encryption: AES256
+auth: OIDC
+logging: true
