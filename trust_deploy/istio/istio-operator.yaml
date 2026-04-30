@@ -1,0 +1,8 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: trust-fabric
+spec:
+  profile: default
+  meshConfig:
+    enableAutoMtls: true

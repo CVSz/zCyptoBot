@@ -1,0 +1,10 @@
+{{- if .Values.istio.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trust-fabric-istio
+  labels:
+    app.kubernetes.io/name: trust-fabric
+data:
+  component: istio
+{{- end }}

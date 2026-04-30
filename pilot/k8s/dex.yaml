@@ -1,0 +1,6 @@
+issuer: https://dex.gid.local
+connectors:
+  - type: oidc
+    id: upstream
+    config:
+      issuer: https://accounts.example.com

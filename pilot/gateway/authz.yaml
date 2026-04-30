@@ -1,0 +1,5 @@
+rules:
+  - match:
+      prefix: "/"
+    requires:
+      provider_name: "gid-verifier"
