@@ -1,0 +1,4 @@
+- Governments / agencies (policy alignment)
+- National telcos (infra + last mile)
+- SIs (delivery + procurement)
+- Academia (standards, talent)

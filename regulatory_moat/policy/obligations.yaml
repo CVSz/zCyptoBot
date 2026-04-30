@@ -1,0 +1,13 @@
+obligations:
+  gdpr:
+    - lawful_basis
+    - data_minimization
+    - dsr_response
+  soc2:
+    - logical_access
+    - change_management
+    - monitoring
+  iso27001:
+    - risk_management
+    - asset_management
+    - incident_management

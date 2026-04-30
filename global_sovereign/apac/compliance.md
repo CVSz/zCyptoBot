@@ -1,0 +1,3 @@
+- PDPA (Singapore/Thailand)
+- Japan APPI
+- Australia Privacy Act

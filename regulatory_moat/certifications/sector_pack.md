@@ -1,0 +1,3 @@
+- Finance: DORA (resilience, third-party)
+- Public: data residency + sovereignty
+- Healthcare: data minimization + access controls
