@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zypto-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zypto-api
+  template:
+    metadata:
+      labels:
+        app: zypto-api
+    spec:
+      containers:
+        - name: api
+          image: zypto:latest
+
+        - name: envoy
+          image: envoyproxy/envoy:v1.29
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy
+
+        - name: opa
+          image: openpolicyagent/opa:latest
+          args:
+            - run
+            - --server
+            - /policies
+          volumeMounts:
+            - name: opa-policy
+              mountPath: /policies
+
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config
+        - name: opa-policy
+          configMap:
+            name: opa-policy
