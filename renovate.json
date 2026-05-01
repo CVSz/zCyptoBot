@@ -1,1 +1,1 @@
-{"extends":["config:base"],"platform":"gitea","dependencyDashboard":true,"prConcurrentLimit":5,"timezone":"UTC"}
+{"extends":["config:base"],"platform":"gitea","dependencyDashboard":true}

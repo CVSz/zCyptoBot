@@ -1,1 +1,1 @@
-Grafana dashboard import instructions for grafana/zcyptobot_dashboard.json.
+Grafana dashboard import notes for zCyptoBot DeepScan metrics.

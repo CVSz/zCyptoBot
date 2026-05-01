@@ -18,22 +18,18 @@ from __future__ import annotations
 
 import argparse
 import ast
-import datetime
+import astor
 import json
 import logging
 import os
 import shutil
 import subprocess
 import uuid
+import datetime
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, Optional
 
-import astor
-import networkx as nx
-import requests
-
-# Optional heavy imports guarded
 try:
     from sentence_transformers import SentenceTransformer
     from sklearn.ensemble import IsolationForest
@@ -41,16 +37,15 @@ except Exception:
     SentenceTransformer = None
     IsolationForest = None
 
-# Prometheus optional
 try:
     from prometheus_client import Counter, start_http_server
 except Exception:
     Counter = None
     start_http_server = None
 
-# -------------------------
-# Configuration
-# -------------------------
+import networkx as nx
+import requests
+
 REPO_DIR = Path(os.environ.get("REPO_DIR", "zCyptoBot"))
 REPO_URL = os.environ.get("REPO_URL", "https://github.com/CVSz/zCyptoBot.git")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "all-MiniLM-L6-v2")
@@ -64,23 +59,16 @@ ANOMALY_CONTAMINATION = float(os.environ.get("ANOMALY_CONTAMINATION", "0.08"))
 MIN_ENTITIES_FOR_ANOMALY = 10
 LOG_LEVEL = logging.INFO
 
-# Prometheus metrics
 if Counter:
     bug_counter = Counter("zcyptobot_bug_detected", "Number of bugs detected by deep_scan")
     fix_counter = Counter("zcyptobot_autofix_applied", "Number of autofixes applied by deep_scan")
 else:
     bug_counter = fix_counter = None
 
-# -------------------------
-# Logging
-# -------------------------
 logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("deep_scan")
 
 
-# -------------------------
-# Utilities
-# -------------------------
 def run(cmd: List[str], cwd: Path = None, check: bool = True) -> subprocess.CompletedProcess:
     logger.debug("Running: %s", " ".join(cmd))
     return subprocess.run(cmd, cwd=cwd, check=check, text=True, capture_output=True)
@@ -107,12 +95,7 @@ def git_configure():
 
 
 def create_autofix_branch() -> str:
-    branch = (
-        AUTOFIX_BRANCH_PREFIX
-        + datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-        + "-"
-        + uuid.uuid4().hex[:6]
-    )
+    branch = AUTOFIX_BRANCH_PREFIX + datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
     run(["git", "checkout", "-b", branch], cwd=REPO_DIR)
     logger.info("Created branch %s", branch)
     return branch
@@ -143,16 +126,7 @@ def push_branch(branch: str) -> bool:
     return True
 
 
-def create_gitea_pr(
-    server_url: str,
-    repo_full: str,
-    branch: str,
-    title: str,
-    body: str,
-    assignee: Optional[str] = None,
-    labels: Optional[List[str]] = None,
-    token: Optional[str] = None,
-):
+def create_gitea_pr(server_url: str, repo_full: str, branch: str, title: str, body: str, assignee: Optional[str] = None, labels: Optional[List[str]] = None, token: Optional[str] = None):
     if not token:
         logger.warning("No token provided for PR creation")
         return None
@@ -188,10 +162,12 @@ def collect_python_entities(repo_path: Path) -> Tuple[List[CodeEntity], Dict[Pat
             text = py.read_text(encoding="utf-8")
             file_contents[py] = text
             tree = ast.parse(text)
-            lines = text.splitlines()
             for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-                    line = lines[node.lineno - 1] if node.lineno - 1 < len(lines) else ""
+                if isinstance(node, ast.FunctionDef):
+                    line = text.splitlines()[node.lineno - 1] if node.lineno - 1 < len(text.splitlines()) else ""
+                    entities.append(CodeEntity(py, node, node.name, node.lineno, line.strip()))
+                elif isinstance(node, ast.ClassDef):
+                    line = text.splitlines()[node.lineno - 1] if node.lineno - 1 < len(text.splitlines()) else ""
                     entities.append(CodeEntity(py, node, node.name, node.lineno, line.strip()))
         except Exception as e:
             logger.warning("Failed to parse %s: %s", py, e)
@@ -205,6 +181,7 @@ def safe_backup_file(path: Path, backup_dir: Path):
     dest = backup_dir / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(path, dest)
+    logger.debug("Backed up %s -> %s", path, dest)
 
 
 def ast_autofix_file(path: Path) -> List[str]:
@@ -216,27 +193,45 @@ def ast_autofix_file(path: Path) -> List[str]:
 
         class Fixer(ast.NodeTransformer):
             def visit_ImportFrom(self, node):
-                nonlocal modified
                 if any(n.name == "*" for n in node.names):
+                    comment = ast.Expr(value=ast.Constant(value=f"# TODO: replace wildcard import from {node.module} with explicit names"))
+                    nonlocal modified
                     modified = True
-                    return ast.Expr(
-                        value=ast.Constant(
-                            value=f"# TODO: replace wildcard import from {node.module} with explicit names"
-                        )
-                    )
+                    return comment
                 return node
 
             def visit_Call(self, node):
-                nonlocal modified
-                node = self.generic_visit(node)
                 if isinstance(node.func, ast.Attribute):
-                    if getattr(node.func.value, "id", "") == "random" and node.func.attr in (
-                        "random",
-                        "randint",
-                        "choice",
-                    ):
+                    if getattr(node.func.value, "id", "") == "random" and node.func.attr in ("random", "randint", "choice"):
+                        new_node = ast.parse("secrets.token_hex(16)").body[0].value
+                        nonlocal modified
                         modified = True
-                        return ast.copy_location(ast.parse("secrets.token_hex(16)").body[0].value, node)
+                        return ast.copy_location(new_node, node)
+                return self.generic_visit(node)
+
+            def visit_FunctionDef(self, node):
+                has_yield = any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node))
+                has_try = any(isinstance(n, ast.Try) for n in node.body)
+                if not has_yield and not has_try:
+                    try_block = ast.Try(
+                        body=node.body,
+                        handlers=[
+                            ast.ExceptHandler(
+                                type=ast.Name(id="Exception", ctx=ast.Load()),
+                                name="e",
+                                body=[
+                                    ast.parse("import logging").body[0],
+                                    ast.parse("logging.exception('DeepScan caught exception: %s', e)").body[0],
+                                    ast.Raise(exc=ast.Name(id="e", ctx=ast.Load()), cause=None),
+                                ],
+                            )
+                        ],
+                        orelse=[],
+                        finalbody=[],
+                    )
+                    node.body = [try_block]
+                    nonlocal modified
+                    modified = True
                 return node
 
         fixer = Fixer()
@@ -257,16 +252,20 @@ def build_embeddings(entities: List[CodeEntity]):
         return None, []
     model = SentenceTransformer(EMBED_MODEL)
     texts = [f"{e.path.name}:{e.name} {e.source_line}" for e in entities]
+    batch_size = 64
     embeddings = []
-    for i in range(0, len(texts), 64):
-        embeddings.extend(model.encode(texts[i : i + 64], show_progress_bar=False))
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i : i + batch_size]
+        embeddings.extend(model.encode(batch, show_progress_bar=False))
     return embeddings, texts
 
 
 def detect_anomalies(embeddings):
     if embeddings is None or IsolationForest is None:
+        logger.info("Skipping anomaly detection due to missing libs")
         return []
     if len(embeddings) < MIN_ENTITIES_FOR_ANOMALY:
+        logger.info("Too few entities (%d) for anomaly detection; skipping", len(embeddings))
         return []
     clf = IsolationForest(contamination=ANOMALY_CONTAMINATION, random_state=42)
     preds = clf.fit_predict(embeddings)
@@ -279,14 +278,15 @@ def write_bug_report(issues: List[Dict]):
         "|------|------|--------|-------|----------|---------------|",
     ]
     for it in issues:
-        lines.append(
-            f"| {it['file']} | {it['line']} | {it['entity']} | {it['message']} | {it['severity']} | {it.get('fix', 'manual review')} |"
-        )
+        lines.append(f"| {it['file']} | {it['line']} | {it['entity']} | {it['message']} | {it['severity']} | {it.get('fix', 'manual review')} |")
     BUG_REPORT.write_text("\n".join(lines), encoding="utf-8")
+    logger.info("Wrote bug report to %s", BUG_REPORT)
 
 
 def write_graph(graph: nx.DiGraph):
-    GRAPH_JSON.write_text(json.dumps(nx.node_link_data(graph), indent=2), encoding="utf-8")
+    data = nx.node_link_data(graph)
+    GRAPH_JSON.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    logger.info("Wrote semantic graph to %s", GRAPH_JSON)
 
 
 def append_changelog(entry: str):
@@ -296,11 +296,13 @@ def append_changelog(entry: str):
         CHANGELOG.write_text(CHANGELOG.read_text(encoding="utf-8") + "\n" + content, encoding="utf-8")
     else:
         CHANGELOG.write_text("# Changelog\n\n" + content, encoding="utf-8")
+    logger.info("Appended changelog")
 
 
 def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool):
     if not no_metrics and start_http_server and Counter:
         start_http_server(PROMETHEUS_PORT)
+        logger.info("Prometheus metrics available on port %d", PROMETHEUS_PORT)
 
     safe_clone_or_pull()
     git_configure()
@@ -311,11 +313,9 @@ def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool):
     for e in entities:
         node_id = f"{e.path.relative_to(REPO_DIR)}:{e.name}:{e.lineno}"
         graph.add_node(node_id, file=str(e.path), name=e.name, lineno=e.lineno)
-
     name_map = {}
-    for node_id, data in graph.nodes(data=True):
-        name_map.setdefault(data["name"], []).append(node_id)
-
+    for n in graph.nodes(data=True):
+        name_map.setdefault(n[1]["name"], []).append(n[0])
     for e in entities:
         src = f"{e.path.relative_to(REPO_DIR)}:{e.name}:{e.lineno}"
         content = file_contents.get(e.path, "")
@@ -332,6 +332,14 @@ def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool):
             issues.append({"file": str(e.path.relative_to(REPO_DIR)), "line": e.lineno, "entity": e.name, "message": "Weak RNG usage", "severity": "High", "fix": "Replace with secrets"})
             if bug_counter:
                 bug_counter.inc()
+        if "import *" in line:
+            issues.append({"file": str(e.path.relative_to(REPO_DIR)), "line": e.lineno, "entity": e.name, "message": "Wildcard import", "severity": "Medium", "fix": "Replace with explicit imports"})
+            if bug_counter:
+                bug_counter.inc()
+        if "hashlib.md5" in line or "sha1" in line:
+            issues.append({"file": str(e.path.relative_to(REPO_DIR)), "line": e.lineno, "entity": e.name, "message": "Weak hash usage", "severity": "High", "fix": "Use SHA256+"})
+            if bug_counter:
+                bug_counter.inc()
 
     for ai in detect_anomalies(embeddings):
         e = entities[ai]
@@ -340,36 +348,49 @@ def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool):
             bug_counter.inc()
 
     write_bug_report(issues)
+
     if dry_run:
+        logger.info("Dry run enabled; exiting before applying fixes")
         return
 
     branch = create_autofix_branch()
     applied_fixes = []
-    for py in sorted({e.path for e in entities}):
+    for py in set(e.path for e in entities):
         applied_fixes.extend(ast_autofix_file(py))
+        if fix_counter and applied_fixes:
+            fix_counter.inc()
 
-    if applied_fixes and commit_changes(f"DeepScan autofix: applied {len(applied_fixes)} fixes") and push:
-        pushed = push_branch(branch)
-        if pushed and pr_create:
-            create_gitea_pr(
-                os.environ.get("GITEA_SERVER_URL", ""),
-                os.environ.get("GITEA_REPO", ""),
-                branch,
-                "DeepScan Autofix: automated fixes",
-                "Automated fixes applied by DeepScan. Please review.",
-                assignee=os.environ.get("AUTOFIX_ASSIGNEE"),
-                labels=os.environ.get("AUTOFIX_LABELS", "").split(",") if os.environ.get("AUTOFIX_LABELS") else None,
-                token=os.environ.get("GITEA_TOKEN"),
-            )
+    if applied_fixes:
+        committed = commit_changes(f"DeepScan autofix: applied {len(applied_fixes)} fixes")
+        if committed and push and push_branch(branch) and pr_create:
+            gitea_url = os.environ.get("GITEA_SERVER_URL")
+            gitea_repo = os.environ.get("GITEA_REPO")
+            token = os.environ.get("GITEA_TOKEN")
+            if gitea_url and gitea_repo and token:
+                create_gitea_pr(
+                    gitea_url,
+                    gitea_repo,
+                    branch,
+                    "DeepScan Autofix: automated fixes",
+                    "Automated fixes applied by DeepScan. Please review.",
+                    assignee=os.environ.get("AUTOFIX_ASSIGNEE"),
+                    labels=os.environ.get("AUTOFIX_LABELS", "").split(",") if os.environ.get("AUTOFIX_LABELS") else None,
+                    token=token,
+                )
+            else:
+                logger.warning("PR creation requested but Gitea config or token missing")
+    else:
+        logger.info("No autofixes applied")
 
     append_changelog(f"- Issues found: {len(issues)}\n- Fixes applied: {len(applied_fixes)}")
+    logger.info("Deep scan complete. Issues: %d, Fixes applied: %d", len(issues), len(applied_fixes))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Deep scan and safe autofix for zCyptoBot")
     parser.add_argument("--dry-run", action="store_true", help="Do not apply fixes or commit")
-    parser.add_argument("--push", action="store_true", help="Push autofix branch to origin")
-    parser.add_argument("--pr-create", action="store_true", help="Create PR after push")
+    parser.add_argument("--push", action="store_true", help="Push autofix branch to origin (requires GIT_PUSH_TOKEN)")
+    parser.add_argument("--pr-create", action="store_true", help="Create PR after push (requires GITEA_TOKEN and GITEA_SERVER_URL and GITEA_REPO)")
     parser.add_argument("--no-metrics", action="store_true", help="Disable Prometheus metrics")
     args = parser.parse_args()
-    main(args.dry_run, args.push, args.pr_create, args.no_metrics)
+    main(dry_run=args.dry_run, push=args.push, pr_create=args.pr_create, no_metrics=args.no_metrics)

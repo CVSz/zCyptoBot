@@ -11,5 +11,10 @@ fi
 CODEQL=./codeql/codeql
 DB=codeql-db
 
+echo "Creating CodeQL database..."
 $CODEQL database create $DB --language=python --source-root=.
+
+echo "Running CodeQL analysis..."
 $CODEQL database analyze $DB --format=sarif-latest --output=codeql-results.sarif
+
+echo "CodeQL analysis complete. Results: codeql-results.sarif"
