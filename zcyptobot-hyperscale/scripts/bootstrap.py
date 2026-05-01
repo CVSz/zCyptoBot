@@ -26,7 +26,7 @@ def service_scaffold(root: Path, idx: int) -> None:
 
 
 def infra_scaffold(root: Path, service_count: int) -> None:
-    write(root / "infra" / "helm" / "Chart.yaml", "apiVersion: v2\nname: zcyptobot-hyperscale\nversion: 0.1.0\n")
+    write(root / "infra" / "helm" / "Chart.yaml", "apiVersion: v2\nname: zypto-hyperscale\nversion: 0.1.0\n")
     write(root / "infra" / "helm" / "values.yaml", f"services: {service_count}\nobservability:\n  enabled: true\nsecurity:\n  networkPolicies: true\n")
     write(root / "infra" / "terraform" / "main.tf", "terraform {\n  required_version = \">= 1.6.0\"\n}\n\nmodule \"network\" {\n  source = \"./modules/network\"\n}\n")
     write(root / "infra" / "security" / "network-policy.yaml", "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny\nspec:\n  podSelector: {}\n  policyTypes: [\"Ingress\", \"Egress\"]\n")

@@ -1,6 +1,6 @@
-from zcyptobot.core.arbitrage import MultiExchangeArbitrage, VenueQuote
-from zcyptobot.core.orderbook import OrderbookDepthModel
-from zcyptobot.core.rl_cluster import RLClusterConfig, RLTrainingPlanner
+from zypto.core.arbitrage import MultiExchangeArbitrage, VenueQuote
+from zypto.core.orderbook import OrderbookDepthModel
+from zypto.core.rl_cluster import RLClusterConfig, RLTrainingPlanner
 
 
 def test_orderbook_depth_model_features() -> None:

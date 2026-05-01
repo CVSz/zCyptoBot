@@ -1,4 +1,4 @@
-from zcyptobot import BotConfig, Orchestrator
+from zypto import BotConfig, Orchestrator
 
 
 def test_orchestrator_cycle_produces_stats():

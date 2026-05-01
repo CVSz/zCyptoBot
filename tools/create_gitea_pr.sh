@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 GITEA_SERVER_URL="https://git.zeaz.dev"
-REPO_FULL="CVSz/zCyptoBot"
+REPO_FULL="CVSz/zypto"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 GITEA_TOKEN="${GITEA_TOKEN:-}"
 [ -n "$GITEA_TOKEN" ] || { echo "GITEA_TOKEN not set"; exit 1; }

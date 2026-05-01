@@ -15,7 +15,7 @@ A progressive, end-to-end trading system scaffold that combines AI/RL strategy w
 ```text
 app/            # Trading app modules (data, signal, risk, execution, AI, arb)
 infra/          # Terraform, Ansible, K8s, scripts, and HFT support files
-src/zcyptobot/  # Packaged core modules and simulation stack
+src/zypto/  # Packaged core modules and simulation stack
 tests/          # Unit/integration regression suite
 ```
 

@@ -30,8 +30,8 @@ make helm-install
 5. Verify autonomy controller:
 
 ```bash
-kubectl -n zcyptobot get pods
-kubectl -n zcyptobot logs deploy/zcyptobot-hyperscale-autonomy-controller
+kubectl -n zypto get pods
+kubectl -n zypto logs deploy/zypto-hyperscale-autonomy-controller
 ```
 
 ## Mutation Guardrails
@@ -45,6 +45,6 @@ Tune `infra/helm/values.yaml`:
 ## Rollback
 
 ```bash
-helm -n zcyptobot rollback zcyptobot-hyperscale
+helm -n zypto rollback zypto-hyperscale
 terraform -chdir=infra/terraform destroy
 ```

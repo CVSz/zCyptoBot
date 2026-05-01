@@ -1,6 +1,6 @@
 # Codex Prompt Pack (Safe Institutional Variant)
 
-This document provides reusable prompts for generating and extending **zCyptoBot** while explicitly avoiding gambling-style logic.
+This document provides reusable prompts for generating and extending **zypto** while explicitly avoiding gambling-style logic.
 
 ## Safety and Scope Constraints
 
@@ -14,7 +14,7 @@ Use these constraints in every generation run:
 ## Master Prompt (Institutional Stack)
 
 ```text
-PROJECT: zcyptobot (AI Quant Trading System)
+PROJECT: zypto (AI Quant Trading System)
 
 GOAL:
 Build a production-grade crypto trading system using AI + rule-based hybrid strategy.

@@ -1,6 +1,6 @@
-from zcyptobot.v4.governance import ApprovalPolicy, ChangeRequest
-from zcyptobot.v4.portfolio import PortfolioAllocator, StrategySlice
-from zcyptobot.v4.surveillance import MarketSurveillance
+from zypto.v4.governance import ApprovalPolicy, ChangeRequest
+from zypto.v4.portfolio import PortfolioAllocator, StrategySlice
+from zypto.v4.surveillance import MarketSurveillance
 
 
 def test_approval_policy_threshold() -> None:

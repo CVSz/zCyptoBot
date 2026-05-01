@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
-from zcyptobot.execution.binance import BinanceExchange
-from zcyptobot.risk.engine import RiskEngine
-from zcyptobot.signal.engine import SignalEngine
+from zypto.execution.binance import BinanceExchange
+from zypto.risk.engine import RiskEngine
+from zypto.signal.engine import SignalEngine
 
 
 @dataclass(slots=True)

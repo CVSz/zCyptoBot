@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: zcyptobot
+  name: zypto
 ---
 apiVersion: v1
 kind: Namespace

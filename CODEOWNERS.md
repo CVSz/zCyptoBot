@@ -11,7 +11,7 @@ trust_deploy/ @ZeaZDev/security
 # Platform applications
 zeaz/ @ZeaZDev/platform
 zeaz-live/ @ZeaZDev/platform
-zcyptobot-hyperscale/ @ZeaZDev/platform
+zypto-hyperscale/ @ZeaZDev/platform
 
 # Documentation and standards
 docs/ @ZeaZDev/docs

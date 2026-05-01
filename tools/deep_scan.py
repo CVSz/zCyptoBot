@@ -2,7 +2,7 @@
 """
 tools/deep_scan.py
 
-Hardened deep scan and safe autofix engine for zCyptoBot.
+Hardened deep scan and safe autofix engine for zypto.
 
 Usage:
   python tools/deep_scan.py --dry-run
@@ -46,8 +46,8 @@ except Exception:
 import networkx as nx
 import requests
 
-REPO_DIR = Path(os.environ.get("REPO_DIR", "zCyptoBot"))
-REPO_URL = os.environ.get("REPO_URL", "https://github.com/CVSz/zCyptoBot.git")
+REPO_DIR = Path(os.environ.get("REPO_DIR", "zypto"))
+REPO_URL = os.environ.get("REPO_URL", "https://github.com/CVSz/zypto.git")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "all-MiniLM-L6-v2")
 BUG_REPORT = Path("bug_report.md")
 GRAPH_JSON = Path("semantic_graph.json")
@@ -60,8 +60,8 @@ MIN_ENTITIES_FOR_ANOMALY = 10
 LOG_LEVEL = logging.INFO
 
 if Counter:
-    bug_counter = Counter("zcyptobot_bug_detected", "Number of bugs detected by deep_scan")
-    fix_counter = Counter("zcyptobot_autofix_applied", "Number of autofixes applied by deep_scan")
+    bug_counter = Counter("zypto_bug_detected", "Number of bugs detected by deep_scan")
+    fix_counter = Counter("zypto_autofix_applied", "Number of autofixes applied by deep_scan")
 else:
     bug_counter = fix_counter = None
 
@@ -387,7 +387,7 @@ def main(dry_run: bool, push: bool, pr_create: bool, no_metrics: bool):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Deep scan and safe autofix for zCyptoBot")
+    parser = argparse.ArgumentParser(description="Deep scan and safe autofix for zypto")
     parser.add_argument("--dry-run", action="store_true", help="Do not apply fixes or commit")
     parser.add_argument("--push", action="store_true", help="Push autofix branch to origin (requires GIT_PUSH_TOKEN)")
     parser.add_argument("--pr-create", action="store_true", help="Create PR after push (requires GITEA_TOKEN and GITEA_SERVER_URL and GITEA_REPO)")

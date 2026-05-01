@@ -12,7 +12,7 @@ k3s-kubeconfig:
 	@echo "ssh ubuntu@$(PRIMARY_IP) 'sudo cat /etc/rancher/k3s/k3s.yaml' > kubeconfig"
 
 helm-install:
-	helm upgrade --install zcyptobot-hyperscale infra/helm -n zcyptobot --create-namespace
+	helm upgrade --install zypto-hyperscale infra/helm -n zypto --create-namespace
 
 deploy-live-ai: terraform-apply helm-install
 	@echo "Live AI control plane deployed."

@@ -1,6 +1,6 @@
-# zCyptoBot V4 — Institutional Trading Stack Blueprint
+# zypto V4 — Institutional Trading Stack Blueprint
 
-This repository now includes a V4 layer (`src/zcyptobot/v4`) designed as an institutional trading stack foundation, not only a retail bot.
+This repository now includes a V4 layer (`src/zypto/v4`) designed as an institutional trading stack foundation, not only a retail bot.
 
 ## Stack domains
 
@@ -13,10 +13,10 @@ This repository now includes a V4 layer (`src/zcyptobot/v4`) designed as an inst
 
 ## File-by-file additions
 
-- `src/zcyptobot/v4/governance.py`: change-request policy checks.
-- `src/zcyptobot/v4/portfolio.py`: inverse-volatility weighted strategy allocation.
-- `src/zcyptobot/v4/surveillance.py`: surveillance alerts for quote-instability patterns.
-- `src/zcyptobot/v4/__init__.py`: package exports.
+- `src/zypto/v4/governance.py`: change-request policy checks.
+- `src/zypto/v4/portfolio.py`: inverse-volatility weighted strategy allocation.
+- `src/zypto/v4/surveillance.py`: surveillance alerts for quote-instability patterns.
+- `src/zypto/v4/__init__.py`: package exports.
 - `tests/test_v4_stack.py`: unit tests for new institutional modules.
 
 ## Operating model (production-style)

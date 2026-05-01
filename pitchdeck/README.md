@@ -1,4 +1,4 @@
-# ZCyptoBot Investor-Grade Pitch Package
+# Zypto Investor-Grade Pitch Package
 
 This package includes a client-ready + investor-grade pitch deck narrative, full visual diagrams (SVG), branding guidance, financial model assumptions, valuation outputs, and a runnable demo with live metrics simulation.
 
