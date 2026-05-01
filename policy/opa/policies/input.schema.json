@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "principal": { "type": "object" },
+    "resource": { "type": "object" },
+    "action": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "request_cost": { "type": "number" },
+    "budget": { "type": "number" },
+    "used": { "type": "number" }
+  }
+}
