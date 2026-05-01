@@ -1,0 +1,4 @@
+rate_limits:
+  - actions:
+      - request_headers:
+          header_name: x-tenant-id
