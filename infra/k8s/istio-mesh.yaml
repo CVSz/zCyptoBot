@@ -1,0 +1,22 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: global-mesh
+  namespace: istio-system
+spec:
+  profile: minimal
+  meshConfig:
+    trustDomain: zypto.global
+    trustDomainAliases:
+      - cluster-a.zypto.global
+      - cluster-b.zypto.global
+    enableAutoMtls: true
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+  values:
+    global:
+      meshID: zypto-mesh
+      multiCluster:
+        clusterName: cluster-a
+      network: network-a

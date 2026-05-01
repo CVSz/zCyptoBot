@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-cross-region
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: api
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - "spiffe://zypto.global/ns/default/sa/api"
+      to:
+        - operation:
+            methods: ["GET", "POST"]
