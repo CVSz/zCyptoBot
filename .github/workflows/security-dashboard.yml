@@ -15,15 +15,15 @@ jobs:
           pip install semgrep
           semgrep scan --config p/ci --sarif > semgrep.sarif
 
-      - name: Download CodeQL SARIF
+      - name: Prepare SARIF inputs
         run: |
-          mkdir sarif
-          cp *.sarif sarif/ || true
+          mkdir -p sarif
+          cp semgrep.sarif sarif/
 
       - name: Merge SARIF
         run: |
           pip install sarif-tools
-          sarif-merge sarif/*.sarif semgrep.sarif > merged.sarif
+          sarif-merge sarif/*.sarif > merged.sarif
 
       - name: Generate HTML
         run: |
