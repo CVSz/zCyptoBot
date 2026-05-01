@@ -1,7 +1,7 @@
-from zcyptobot.core.arbitrage import VenueQuote
-from zcyptobot.core.arbitrage_v6 import ArbitrageRouterV6, ExchangeBalance
-from zcyptobot.core.infra_v7 import InfraBlueprintV7, V7InfraConfig
-from zcyptobot.core.rl_v5 import RLV5Policy, RLState
+from zypto.core.arbitrage import VenueQuote
+from zypto.core.arbitrage_v6 import ArbitrageRouterV6, ExchangeBalance
+from zypto.core.infra_v7 import InfraBlueprintV7, V7InfraConfig
+from zypto.core.rl_v5 import RLV5Policy, RLState
 
 
 def test_v5_rl_policy_actions() -> None:

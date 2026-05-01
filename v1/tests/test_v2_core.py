@@ -1,5 +1,5 @@
-from zcyptobot.risk.engine import RiskEngine
-from zcyptobot.signal.engine import SignalEngine
+from zypto.risk.engine import RiskEngine
+from zypto.signal.engine import SignalEngine
 
 
 def test_signal_engine_long():

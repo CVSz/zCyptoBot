@@ -10,7 +10,7 @@ from typing import Dict, List
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
-app = FastAPI(title="ZCyptoBot Live AI Decision Engine Demo")
+app = FastAPI(title="Zypto Live AI Decision Engine Demo")
 
 TENANTS = {
     "alpha-capital": {"plan": "Enterprise", "users": 84, "api_limit": 1_000_000},
@@ -105,7 +105,7 @@ def home():
 <head>
   <meta charset='utf-8' />
   <meta name='viewport' content='width=device-width, initial-scale=1' />
-  <title>ZCyptoBot Live AI Decision Engine</title>
+  <title>Zypto Live AI Decision Engine</title>
   <script crossorigin src='https://unpkg.com/react@18/umd/react.development.js'></script>
   <script crossorigin src='https://unpkg.com/react-dom@18/umd/react-dom.development.js'></script>
   <script src='https://unpkg.com/@babel/standalone/babel.min.js'></script>
@@ -175,7 +175,7 @@ def home():
       return <div className='wrap'>
         <div className='top'>
           <div>
-            <div className='title'>ZCyptoBot • Live AI Decision Engine</div>
+            <div className='title'>Zypto • Live AI Decision Engine</div>
             <div className='muted'>Realtime signal generation, execution telemetry, and SaaS multi-tenant controls.</div>
           </div>
           <div><span className='muted'>Tenant:</span> <select value={tenant} onChange={e=>setTenant(e.target.value)}>{tenantMeta.map(t=><option key={t.tenant_id} value={t.tenant_id}>{t.tenant_id}</option>)}</select></div>

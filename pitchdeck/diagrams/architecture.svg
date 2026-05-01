@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
   <rect width="1200" height="700" fill="#0b1220"/>
-  <text x="40" y="50" fill="#e2e8f0" font-size="30" font-family="Arial">ZCyptoBot Reference Architecture</text>
+  <text x="40" y="50" fill="#e2e8f0" font-size="30" font-family="Arial">Zypto Reference Architecture</text>
   <rect x="40" y="90" width="1120" height="560" rx="16" fill="#111827" stroke="#334155"/>
   <rect x="80" y="140" width="220" height="140" rx="12" fill="#1d4ed8"/><text x="100" y="210" fill="white" font-size="20">Clients / API</text>
   <rect x="340" y="140" width="220" height="140" rx="12" fill="#0f766e"/><text x="365" y="210" fill="white" font-size="20">AIOps Orchestrator</text>

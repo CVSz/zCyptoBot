@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: zcyptobot
-  namespace: zcyptobot
+  name: zypto
+  namespace: zypto
 spec:
   selector:
-    app: zcyptobot
+    app: zypto
   ports:
     - port: 80
       targetPort: 8000

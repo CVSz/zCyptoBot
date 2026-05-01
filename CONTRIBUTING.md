@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for improving zCyptoBot.
+Thank you for improving zypto.
 
 ## Branching & Commits
 - Create focused branches per change set.

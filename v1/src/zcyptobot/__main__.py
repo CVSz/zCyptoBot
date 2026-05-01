@@ -1,4 +1,4 @@
-from zcyptobot import Orchestrator
+from zypto import Orchestrator
 
 
 def main() -> None:

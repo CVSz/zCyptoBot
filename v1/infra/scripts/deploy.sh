@@ -18,6 +18,6 @@ kubectl apply -f infra/k8s/kafka.yaml
 kubectl apply -f infra/k8s/redis.yaml
 kubectl apply -f infra/k8s/monitoring.yaml
 kubectl apply -f infra/k8s/argocd.yaml
-kubectl apply -f infra/k8s/zcyptobot/
+kubectl apply -f infra/k8s/zypto/
 
 echo "DONE"

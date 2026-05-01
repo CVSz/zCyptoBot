@@ -1,6 +1,6 @@
-# zCyptoBot — Final Release (v1.0.0)
+# zypto — Final Release (v1.0.0)
 
-zCyptoBot is a multi-domain AI systems repository that includes platform services, simulation engines, compliance toolkits, infrastructure definitions, and operational runbooks.
+zypto is a multi-domain AI systems repository that includes platform services, simulation engines, compliance toolkits, infrastructure definitions, and operational runbooks.
 
 ## Final Release Highlights
 - **Release:** v1.0.0 (Final)

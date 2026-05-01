@@ -46,7 +46,7 @@ resource "aws_instance" "k3s_server_primary" {
   })
 
   tags = {
-    Name = "zcyptobot-k3s-primary-server"
+    Name = "zypto-k3s-primary-server"
     Role = "k3s-server"
   }
 }
@@ -66,7 +66,7 @@ resource "aws_instance" "k3s_server_secondary" {
   })
 
   tags = {
-    Name = "zcyptobot-k3s-secondary-server"
+    Name = "zypto-k3s-secondary-server"
     Role = "k3s-server"
   }
 }

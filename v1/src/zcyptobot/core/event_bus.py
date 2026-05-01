@@ -10,7 +10,7 @@ from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 class EventBus:
     """Minimal async Kafka wrapper for typed JSON events."""
 
-    def __init__(self, brokers: str, client_id: str = "zcyptobot") -> None:
+    def __init__(self, brokers: str, client_id: str = "zypto") -> None:
         self.brokers = brokers
         self.client_id = client_id
         self._producer = AIOKafkaProducer(bootstrap_servers=brokers, client_id=client_id)

@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zcyptobot
+  name: zypto
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: zcyptobot
+      app: zypto
   template:
     metadata:
       labels:
-        app: zcyptobot
+        app: zypto
     spec:
       containers:
-        - name: zcyptobot
+        - name: zypto
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

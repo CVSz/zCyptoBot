@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from zcyptobot.core.arbitrage import MultiExchangeArbitrage, VenueQuote
+from zypto.core.arbitrage import MultiExchangeArbitrage, VenueQuote
 
 
 @dataclass(slots=True)

@@ -1,4 +1,4 @@
-# ZCyptoBot Growth Engine Blueprint (Referral + Viral + AI Automation)
+# Zypto Growth Engine Blueprint (Referral + Viral + AI Automation)
 
 ## 1) North Star and Growth Math
 - **North Star Metric (NSM):** Net Revenue Retention-adjusted ARR growth.

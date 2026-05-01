@@ -1,4 +1,4 @@
-# ZCyptoBot — Investor-Grade Pitch Deck (Narrative)
+# Zypto — Investor-Grade Pitch Deck (Narrative)
 
 ## 1) Vision
 Build the operating system for autonomous, institution-grade crypto execution with measurable alpha, strict risk control, and compliant automation.
@@ -9,7 +9,7 @@ Build the operating system for autonomous, institution-grade crypto execution wi
 - Teams lack real-time observability and AI-driven remediation.
 
 ## 3) Solution
-ZCyptoBot combines:
+Zypto combines:
 1. Multi-exchange execution layer
 2. AIops orchestration with policy guardrails
 3. Real-time risk + compliance controls

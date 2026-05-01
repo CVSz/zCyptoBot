@@ -1,7 +1,7 @@
-from zcyptobot.config import BotConfig
-from zcyptobot.models import MarketTick
-from zcyptobot.pipeline import QuantBot
-from zcyptobot.simulator import run_simulation
+from zypto.config import BotConfig
+from zypto.models import MarketTick
+from zypto.pipeline import QuantBot
+from zypto.simulator import run_simulation
 
 
 def test_bot_accepts_valid_ticks_and_updates_equity():

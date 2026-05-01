@@ -4,7 +4,7 @@ observability:
 security:
   networkPolicies: true
 autonomy:
-  image: ghcr.io/zcyptobot/autonomy-controller:latest
+  image: ghcr.io/zypto/autonomy-controller:latest
   codeRewriteEnabled: true
   policy:
     maxConcurrentMutations: 2

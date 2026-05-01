@@ -1,1 +1,1 @@
-Grafana dashboard import notes for zCyptoBot DeepScan metrics.
+Grafana dashboard import notes for zypto DeepScan metrics.
