@@ -1,0 +1,11 @@
+- rule: Write below /etc
+  desc: Detect write attempts under /etc
+  condition: evt.type=open and fd.name startswith /etc and evt.arg.flags contains O_WRONLY
+  output: "Write under /etc (user=%user.name file=%fd.name)"
+  priority: WARNING
+
+- rule: Suspicious Network Connection
+  desc: Outbound connection to unknown IP
+  condition: evt.type=connect and not fd.sip in (10.0.0.0/8, 192.168.0.0/16)
+  output: "Unexpected outbound connection (ip=%fd.sip)"
+  priority: WARNING
