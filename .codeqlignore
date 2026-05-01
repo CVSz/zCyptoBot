@@ -1,0 +1,6 @@
+.git/
+.git/**
+v1/
+legacy/
+tmp/
+logs/

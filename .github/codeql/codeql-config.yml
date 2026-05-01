@@ -1,0 +1,12 @@
+name: "zcyptobot-codeql-config"
+
+paths-ignore:
+  - ".git/**"
+  - "**/.git/**"
+  - "**/__pycache__/**"
+  - "**/*.log"
+  - "node_modules/**"
+  - "v1/**"
+  - "legacy/**"
+  - "tmp/**"
+  - "logs/**"
