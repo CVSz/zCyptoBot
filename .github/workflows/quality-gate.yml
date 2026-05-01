@@ -1,0 +1,34 @@
+name: Quality Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt || true
+      - run: pip install ruff black isort mypy pytest pyyaml
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format Check
+        run: black --check . && isort --check-only .
+
+      - name: Types
+        run: mypy . || true
+
+      - name: Architecture Guard
+        run: python tools/arch_guard.py
+
+      - name: Tests
+        run: pytest -q

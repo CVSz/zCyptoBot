@@ -1,0 +1,27 @@
+layers:
+  apps:
+    allow:
+      - core
+      - saas
+      - ml
+  core:
+    allow:
+      - infra
+  infra:
+    allow: []
+  saas:
+    allow:
+      - core
+      - infra
+  ml:
+    allow:
+      - core
+      - infra
+
+deny:
+  - from: core
+    to: apps
+  - from: infra
+    to: core
+  - from: infra
+    to: apps
