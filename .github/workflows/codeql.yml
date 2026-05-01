@@ -39,6 +39,11 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
+          config-file: .github/codeql/codeql-config.yml
+
+      - name: Set PYTHONPATH
+        if: matrix.language == 'python'
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
       - name: Set up Python
         if: matrix.language == 'python'
