@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install -r requirements.txt || true
+      - run: pip install -r requirements.txt
       - run: pip install ruff black isort mypy pytest pyyaml
 
       - name: Lint
@@ -25,7 +25,7 @@ jobs:
         run: black --check . && isort --check-only .
 
       - name: Types
-        run: mypy . || true
+        run: mypy .
 
       - name: Architecture Guard
         run: python tools/arch_guard.py

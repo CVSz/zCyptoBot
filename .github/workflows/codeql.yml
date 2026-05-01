@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ "python", "javascript", "typescript" ]
+        language: [ "python", "javascript" ]
 
     steps:
       - name: Checkout
