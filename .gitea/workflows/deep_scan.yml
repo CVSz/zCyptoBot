@@ -8,8 +8,18 @@ jobs:
     runs-on: docker
     container:
       image: python:3.10-slim
+    env:
+      PROMETHEUS_PORT: "8000"
     steps:
       - uses: actions/checkout@v3
       - run: apt-get update && apt-get install -y git curl jq unzip
-      - run: pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8 requests
+      - run: pip install --upgrade pip && pip install sentence-transformers scikit-learn networkx astor prometheus-client bandit flake8 requests
       - run: python tools/deep_scan.py --dry-run
+  security_scan:
+    runs-on: docker
+    container:
+      image: python:3.10-slim
+    steps:
+      - uses: actions/checkout@v3
+      - run: apt-get update && apt-get install -y curl unzip
+      - run: chmod +x tools/run_codeql.sh && tools/run_codeql.sh
