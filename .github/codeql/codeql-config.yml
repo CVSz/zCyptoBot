@@ -1,12 +1,6 @@
-name: "zcyptobot-codeql-config"
-
+name: zypto-codeql
+queries:
+  - uses: ./.github/codeql/queries
 paths-ignore:
   - ".git/**"
-  - "**/.git/**"
-  - "**/__pycache__/**"
-  - "**/*.log"
   - "node_modules/**"
-  - "v1/**"
-  - "legacy/**"
-  - "tmp/**"
-  - "logs/**"
