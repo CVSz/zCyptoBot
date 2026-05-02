@@ -3,7 +3,7 @@ import shutil
 import sys
 ROOT = Path.cwd()
 sys.path.insert(0, str(ROOT / "tools"))
-import deep_scan as ds
+import deep_scan as ds  # noqa: E402
 
 def setup_module(module):
     p = Path("zypto")

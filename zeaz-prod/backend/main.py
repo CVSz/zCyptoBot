@@ -1,10 +1,10 @@
 import asyncio
 import random
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.security import HTTPAuthorizationCredentials
 
-from auth import create_token, security, verify_credentials
+from auth import create_token, verify_credentials
 from db import init_db, save_decision
 from explain import explain
 from kafka import publish
