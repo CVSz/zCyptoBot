@@ -2,9 +2,9 @@ name: Sovereign Execution Pipeline
 
 on:
   push:
-    branches: [ "main", "production" ]
+    branches: ["main", "production"]
   pull_request:
-    branches: [ "main", "production" ]
+    branches: ["main", "production"]
   schedule:
     - cron: '0 2 * * *' # Deterministic daily anomaly scanning
 
@@ -35,20 +35,46 @@ jobs:
           cache: true
 
       - name: Resolve Go Manifests
+        shell: bash
         run: |
-          cd p2p/go-node && go mod tidy && go mod download
+          mapfile -t go_mod_dirs < <(find . -name go.mod -not -path '*/vendor/*' -exec dirname {} \; | sort -u)
+          if [ ${#go_mod_dirs[@]} -eq 0 ]; then
+            echo "No go.mod files found; skipping Go resolution"
+            exit 0
+          fi
+
+          for dir in "${go_mod_dirs[@]}"; do
+            echo "Resolving Go modules in ${dir}"
+            (
+              cd "${dir}"
+              go mod tidy
+              go mod download
+            )
+          done
 
       - name: Setup Python Runtime
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+          cache: pip
 
       - name: Resolve Python Manifests
+        shell: bash
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          find . -name "requirements*.txt" -exec pip install -r {} --dry-run \;
+          python -m venv .ci-venv
+          source .ci-venv/bin/activate
+          python -m pip install --upgrade pip
+
+          mapfile -t req_files < <(find . -name 'requirements*.txt' -not -path './.ci-venv/*' | sort)
+          if [ ${#req_files[@]} -eq 0 ]; then
+            echo "No requirements files found; skipping Python resolution"
+            exit 0
+          fi
+
+          for req in "${req_files[@]}"; do
+            echo "Validating Python dependencies in ${req}"
+            pip install --dry-run -r "${req}"
+          done
 
       - name: Execute OSV-Scanner
         uses: google/osv-scanner-action/osv-scanner-action@v2.3.5
@@ -75,20 +101,34 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      - name: Detect Solidity Contracts
+        id: solidity
+        shell: bash
+        run: |
+          count=$(find . -name '*.sol' | wc -l)
+          if [ "$count" -gt 0 ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No Solidity contracts found; skipping Slither"
+          fi
+
       - name: Install Foundry
+        if: steps.solidity.outputs.found == 'true'
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
       - name: Execute Slither Static Analyzer
+        if: steps.solidity.outputs.found == 'true'
         uses: crytic/slither-action@v0.4.0
         continue-on-error: false
         with:
-          target: './contracts'
-          slither-args: '--exclude-dependencies --filter-paths "node_modules|lib" --sarif results.sarif'
+          target: .
+          slither-args: '--exclude-dependencies --filter-paths "node_modules|lib|.ci-venv" --sarif results.sarif'
 
       - name: Upload Contract SARIF
-        if: always()
+        if: always() && steps.solidity.outputs.found == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
@@ -109,7 +149,7 @@ jobs:
             p/security-audit
             p/solidity
             p/golang
-          generateSarif: "1"
+          generateSarif: '1'
 
       - name: Upload Semgrep SARIF
         if: always()
