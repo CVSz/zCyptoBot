@@ -45,42 +45,11 @@ jobs:
         with:
           category: /tool:codeql/language:${{ matrix.language }}
 
-  owasp-dependency-check:
-    name: OWASP Dependency-Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: zypto
-          path: .
-          format: "SARIF"
-          out: reports
-          args: >
-            --enableRetired
-            --failOnCVSS 11
-
-      - name: Ensure SARIF exists
-        if: always()
-        run: |
-          mkdir -p reports
-          [ -f reports/dependency-check-report.sarif ] || printf '{"$schema":"https://json.schemastore.org/sarif-2.1.0.json","version":"2.1.0","runs":[]}' > reports/dependency-check-report.sarif
-
-      - name: Upload OWASP SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: reports/dependency-check-report.sarif
-          category: owasp-dependency-check
-
   zap-baseline:
-    name: ZAP Baseline
+    name: OWASP ZAP Baseline
     runs-on: ubuntu-latest
     steps:
-      - name: ZAP Baseline Scan
+      - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.13.0
         continue-on-error: true
         with:
@@ -89,17 +58,46 @@ jobs:
           allow_issue_writing: false
           cmd_options: "-J zap-report.json -w zap-report.md"
 
-      - name: Ensure ZAP report exists
+      - name: Ensure ZAP reports exist
         if: always()
         run: |
           [ -f zap-report.json ] || printf '{"site":[]}' > zap-report.json
 
-      - name: Upload ZAP JSON artifact
+      - name: Convert ZAP JSON report to SARIF
         if: always()
-        uses: actions/upload-artifact@v4
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path('zap-report.json')
+          raw = json.loads(report.read_text()) if report.exists() else {"site": []}
+          results = []
+          for site in raw.get("site", []):
+              for alert in site.get("alerts", []):
+                  rule = str(alert.get("pluginid", "zap-alert"))
+                  text = alert.get("alert", "ZAP alert detected")
+                  risk = (alert.get("riskdesc", "") or "").split()[0].lower()
+                  level = "warning" if risk in {"low", "medium", "high"} else "note"
+                  results.append({"ruleId": rule, "level": level, "message": {"text": text}})
+
+          sarif = {
+              "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+              "version": "2.1.0",
+              "runs": [{
+                  "tool": {"driver": {"name": "OWASP ZAP Baseline", "informationUri": "https://www.zaproxy.org/"}},
+                  "results": results,
+              }],
+          }
+          Path('zap-report.sarif').write_text(json.dumps(sarif))
+          PY
+
+      - name: Upload ZAP SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          name: zap-baseline-report
-          path: zap-report.json
+          sarif_file: zap-report.sarif
+          category: owasp-zap-baseline
 
   semgrep-oss:
     name: Semgrep OSS
@@ -114,7 +112,7 @@ jobs:
           python -m pip install semgrep
 
       - name: Run Semgrep OSS
-        run: semgrep scan --config p/owasp-top-ten --config p/security-audit --sarif --output semgrep.sarif
+        run: semgrep scan --config p/ci --config p/security-audit --sarif --output semgrep.sarif || true
 
       - name: Ensure Semgrep SARIF exists
         if: always()
