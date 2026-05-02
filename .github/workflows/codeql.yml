@@ -26,7 +26,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ "python", "javascript" ]
+        include:
+          - language: "python"
+            build-mode: none
+          - language: "javascript"
+            build-mode: none
+          - language: "c-cpp"
+            build-mode: none
 
     steps:
       - name: Checkout
@@ -35,9 +41,10 @@ jobs:
           fetch-depth: 0
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
           config-file: .github/codeql/codeql-config.yml
 
@@ -79,6 +86,6 @@ jobs:
           if [ -f package.json ]; then npm run build --if-present; fi
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
