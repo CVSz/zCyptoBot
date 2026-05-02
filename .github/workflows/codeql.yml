@@ -256,27 +256,79 @@ jobs:
         shell: bash
         run: |
           python - <<'PY2'
-          import json, pathlib
+          import json
+          import pathlib
+
           report = pathlib.Path('zap-report.json')
+          rules = {}
+          results = []
+
+          if report.exists():
+            data = json.loads(report.read_text())
+            for site in data.get('site', []):
+              site_name = site.get('name', 'https://example.com')
+              for alert in site.get('alerts', []):
+                rule_id = str(alert.get('pluginid') or 'zap-alert')
+                alert_name = alert.get('alert', 'ZAP alert detected')
+                severity = (alert.get('riskcode') or '').strip()
+                level = {
+                  '3': 'error',
+                  '2': 'warning',
+                  '1': 'note',
+                  '0': 'note',
+                }.get(severity, 'warning')
+
+                if rule_id not in rules:
+                  rules[rule_id] = {
+                    "id": rule_id,
+                    "name": alert_name,
+                    "shortDescription": {"text": alert_name},
+                    "helpUri": alert.get('reference') or 'https://www.zaproxy.org/docs/alerts/',
+                    "properties": {"security-severity": severity or '0'},
+                  }
+
+                instances = alert.get('instances') or [{}]
+                for inst in instances:
+                  uri = inst.get('uri') or site_name
+                  if not uri.startswith('http://') and not uri.startswith('https://'):
+                    uri = f"https://example.com{uri if str(uri).startswith('/') else '/' + str(uri)}"
+                  msg = alert_name
+                  if inst.get('method'):
+                    msg = f"[{inst['method']}] {msg}"
+
+                  results.append({
+                    "ruleId": rule_id,
+                    "level": level,
+                    "message": {"text": msg},
+                    "locations": [{
+                      "physicalLocation": {
+                        "artifactLocation": {"uri": uri}
+                      }
+                    }]
+                  })
+
           sarif = {
             "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
             "version": "2.1.0",
             "runs": [{
-              "tool": {"driver": {"name": "OWASP ZAP Baseline", "informationUri": "https://www.zaproxy.org/"}},
-              "results": []
+              "tool": {
+                "driver": {
+                  "name": "OWASP ZAP Baseline",
+                  "informationUri": "https://www.zaproxy.org/",
+                  "rules": list(rules.values()),
+                }
+              },
+              "results": results
             }]
           }
-          if report.exists():
-            data = json.loads(report.read_text())
-            for site in data.get('site', []):
-              for alert in site.get('alerts', []):
-                sarif['runs'][0]['results'].append({
-                  "ruleId": alert.get('pluginid', 'zap-alert'),
-                  "level": "warning",
-                  "message": {"text": alert.get('alert', 'ZAP alert detected')}
-                })
           pathlib.Path('zap-report.sarif').write_text(json.dumps(sarif))
           PY2
+
+      - name: Re-checkout git metadata for SARIF upload
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Upload ZAP SARIF
         if: always()
