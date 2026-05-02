@@ -78,7 +78,7 @@ jobs:
           done
 
       - name: Execute OSV-Scanner
-        uses: google/osv-scanner-action/scan@v2.3.5
+        uses: google/osv-scanner-action@v2.3.5
         continue-on-error: false
         with:
           scan-args: |-
