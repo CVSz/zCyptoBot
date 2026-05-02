@@ -22,7 +22,7 @@ async def startup() -> None:
 
 @app.post("/auth/token")
 async def token(user: str, tenant: str) -> dict:
-    return {"token": create_token(user, tenant)}
+    return {"token": create_token(user=user, tenant=tenant)}
 
 
 def get_state(tenant: str) -> dict[str, float]:
