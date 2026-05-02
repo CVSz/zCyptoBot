@@ -27,15 +27,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run OSV-Scanner
+      - name: Run OSV-Scanner CLI
         id: osv-scan
-        uses: google/osv-scanner-action@v2.3.5
-        with:
-          scan-args: |-
-            --recursive
-            --format sarif
-            --output results.sarif
-            ./
+        shell: bash
+        run: |
+          curl -sSfL https://github.com/google/osv-scanner/releases/download/v2.3.5/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner
+          chmod +x /usr/local/bin/osv-scanner
+          osv-scanner scan --recursive --format sarif --output results.sarif ./
 
       - name: Upload SARIF to Security Tab
         if: always()
