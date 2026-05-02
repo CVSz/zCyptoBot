@@ -1,0 +1,13 @@
+# CVSz/Zypto OSV Configuration
+
+[scan]
+exclude = [
+  "**/__pycache__/*",
+  "audit_simulation/evidence/*",
+  "war_simulation/**",
+  "dataroom/**"
+]
+
+[[ignored_vulnerabilities]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# reason = "Confirmed non-exploitable in isolated TEE environment."

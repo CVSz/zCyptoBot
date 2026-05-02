@@ -1,41 +1,45 @@
-name: OSV-Scanner
+name: OSV-Scan-Production
 
 on:
   push:
-    branches: [ main, master ]
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'brand/**'
   pull_request:
-    branches: [ main, master ]
+    branches: ["main"]
   schedule:
-    - cron: '0 0 * * 1' # Weekly scan for new vulnerabilities
+    - cron: '30 4 * * 1' # Weekly scan at 04:30 UTC on Mondays
+  workflow_dispatch:
 
 jobs:
-  scan:
+  vulnerability-scan:
+    name: Dependency Audit
     runs-on: ubuntu-latest
     permissions:
-      # Required to upload results to GitHub Security tab
       security-events: write
-      # Required to read repository content
       contents: read
+      actions: read
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          path: repo
 
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@v2.3.5
+        id: osv-scan
+        uses: google/osv-scanner-action/scan@v1
         with:
-          # Scan only this repository checkout directory.
           scan-args: |-
             --recursive
-            ./repo
-            --no-resolve
             --format sarif
-            --output-file results.sarif
+            --output results.sarif
+            ./
 
-      - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload SARIF to Security Tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
+          category: osv-scanner
