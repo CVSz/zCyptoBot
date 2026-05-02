@@ -15,7 +15,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install -r requirements.txt
+      - name: Install project dependencies (if present)
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "requirements.txt not found; skipping project dependency install"
+          fi
       - run: pip install ruff black isort mypy pytest pyyaml
 
       - name: Lint
