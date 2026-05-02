@@ -85,7 +85,6 @@ jobs:
             --format sarif
             --output-file results.sarif
             --call-analysis=all
-            --ignore-unfixed
 
       - name: Upload SARIF Security Intent
         if: always()
