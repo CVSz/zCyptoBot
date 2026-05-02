@@ -82,18 +82,16 @@ jobs:
                   site_name = site.get("name") or "https://example.com"
                   instances = alert.get("instances") or [{}]
                   for inst in instances:
-                      uri = inst.get("uri") or site_name
-                      if not str(uri).startswith(("http://", "https://")):
-                          uri = f"https://example.com{uri if str(uri).startswith('/') else '/' + str(uri)}"
+                      target_url = str(inst.get("uri") or site_name)
                       method = inst.get("method")
-                      msg = f"[{method}] {text}" if method else text
+                      msg = f"[{method}] {text} (target: {target_url})" if method else f"{text} (target: {target_url})"
                       results.append({
                           "ruleId": rule,
                           "level": level,
                           "message": {"text": msg},
                           "locations": [{
                               "physicalLocation": {
-                                  "artifactLocation": {"uri": uri}
+                                  "artifactLocation": {"uri": "zap-report.json", "uriBaseId": "%SRCROOT%"}
                               }
                           }],
                       })
