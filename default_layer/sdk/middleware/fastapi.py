@@ -1,4 +1,5 @@
-from fastapi import HTTPException, Request
+from starlette.exceptions import HTTPException
+from starlette.requests import Request
 
 
 def gid_middleware(verify_fn):

@@ -47,5 +47,5 @@ def join_features(user_id: str, offline: dict[str, Any]) -> dict[str, Any]:
         **online,
         "feature_join_version": "v1",
         "combined_score": online_score + offline_score,
-        "join_key": hashlib.sha1(user_id.encode("utf-8")).hexdigest()[:12],
+        "join_key": hashlib.sha256(user_id.encode("utf-8")).hexdigest()[:12],
     }
