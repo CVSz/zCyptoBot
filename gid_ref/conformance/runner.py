@@ -1,4 +1,3 @@
-import json
 
 
 def run(cases, verify_fn):

@@ -1,4 +1,3 @@
-import torch
 
 
 def plan(model, state, steps=5):

@@ -3,7 +3,7 @@ import os
 import random
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from auth import create_token, verify_token
