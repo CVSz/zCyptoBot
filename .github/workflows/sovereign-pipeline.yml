@@ -85,7 +85,6 @@ jobs:
             --recursive ./repo
             --format sarif
             --output-file results.sarif
-            --call-analysis=all
 
       - name: Upload SARIF Security Intent
         if: always()
