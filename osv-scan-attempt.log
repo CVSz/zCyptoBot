@@ -1,0 +1,8 @@
+Attempted to run:
+  docker run --rm -v "$PWD":/github/workspace -w /github/workspace ghcr.io/google/osv-scanner-action:v2.3.5 "--recursive ./repo --no-resolve --format sarif --output-file results.sarif"
+
+Result:
+  /bin/bash: line 1: docker: command not found
+
+Environment limitation:
+  Docker CLI is not available in this execution environment, so the GitHub Action container could not be launched.
