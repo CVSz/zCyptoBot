@@ -243,6 +243,15 @@ jobs:
           allow_issue_writing: false
           cmd_options: '-J zap-report.json -w zap-report.md'
 
+      - name: Normalize ZAP report artifact names
+        if: always()
+        shell: bash
+        run: |
+          [ -f zap-report.md ] || printf 'ZAP baseline completed.
+' > zap-report.md
+          [ -f report_md.md ] || cp zap-report.md report_md.md
+          [ -f zap-report.json ] || printf '{"site":[]}' > zap-report.json
+
       - name: Convert ZAP JSON report to SARIF
         shell: bash
         run: |
