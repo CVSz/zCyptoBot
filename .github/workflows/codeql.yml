@@ -27,10 +27,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - language: "actions"
+            build-mode: none
+          - language: "go"
+            build-mode: none
           - language: "python"
             build-mode: none
           - language: "javascript"
             build-mode: none
+          - language: "javascript"
+            build-mode: none
+            category: "/language:javascript-typescript"
           - language: "c-cpp"
             build-mode: none
 
@@ -66,10 +73,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f pyproject.toml ]; then pip install .; fi
 
-      # JavaScript analysis uses build-mode: none, so dependency installation
-      # and project builds are intentionally skipped.
+      # JavaScript/TypeScript, Go, and Actions analyses use build-mode: none,
+      # so dependency installation and project builds are intentionally skipped.
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{ matrix.language }}"
+          category: ${{ matrix.category || format('/language:{0}', matrix.language) }}
