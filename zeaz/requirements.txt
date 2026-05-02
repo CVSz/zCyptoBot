@@ -1,6 +1,9 @@
 aiokafka
-httpx
+httpx>=0.20.0
 numpy
 clickhouse-driver
 pydantic-settings
 prometheus-client
+h11>=0.16.0
+h2>=4.3.0
+idna>=3.7

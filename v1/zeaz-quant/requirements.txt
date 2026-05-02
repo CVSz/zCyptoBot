@@ -1,3 +1,6 @@
 numpy
-httpx
+httpx>=0.20.0
 pydantic-settings
+h11>=0.16.0
+h2>=4.3.0
+idna>=3.7
