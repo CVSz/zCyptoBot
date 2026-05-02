@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
 
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v1
+        uses: google/osv-scanner-action@v2
         with:
           # Scans the entire repository recursively
           scan-args: |-
