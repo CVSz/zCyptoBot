@@ -22,7 +22,7 @@ class KafkaConsumerWrapper:
         self.consumer = AIOKafkaConsumer(
             topic,
             bootstrap_servers=brokers,
-            value_deserializer=lambda m: orjson.loads(m),
+            value_deserializer=orjson.loads,
         )
 
     async def start(self):

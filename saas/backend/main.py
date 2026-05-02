@@ -23,7 +23,7 @@ app.add_middleware(
 
 @app.post("/auth/signup")
 def signup(email: str, tenant: str):
-    token = create_token({"email": email, "tenant": tenant, "role": "owner"})
+    token = create_token(user={"email": email, "tenant": tenant, "role": "owner"})
     return {"access_token": token, "token_type": "bearer"}
 
 

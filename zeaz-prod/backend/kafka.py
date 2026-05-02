@@ -1,7 +1,7 @@
 import json
 import os
 
-from kafka import KafkaProducer
+from kafka.producer import KafkaProducer
 
 
 def _serialize(payload: dict) -> bytes:

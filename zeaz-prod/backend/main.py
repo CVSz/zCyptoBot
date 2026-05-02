@@ -2,9 +2,8 @@ import asyncio
 import random
 
 from fastapi import FastAPI, HTTPException, WebSocket
-from fastapi.security import HTTPAuthorizationCredentials
 
-from auth import create_token, verify_credentials
+from auth import create_token, verify
 from db import init_db, save_decision
 from explain import explain
 from kafka import publish
@@ -34,7 +33,7 @@ def get_state(tenant: str) -> dict[str, float]:
 
 @app.websocket("/ws/{tenant}")
 async def ws(tenant: str, ws: WebSocket, token: str) -> None:
-    claims = verify_credentials(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
+    claims = verify(token)
     if claims.get("tenant") != tenant:
         raise HTTPException(403, "tenant mismatch")
 
