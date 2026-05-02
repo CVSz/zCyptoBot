@@ -65,25 +65,8 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f pyproject.toml ]; then pip install .; fi
 
-      - name: Set up Node
-        if: matrix.language == 'javascript' || matrix.language == 'typescript'
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Node deps
-        if: matrix.language == 'javascript' || matrix.language == 'typescript'
-        run: |
-          if [ -f package-lock.json ]; then npm ci;
-          elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile;
-          elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i --frozen-lockfile;
-          elif [ -f package.json ]; then npm install;
-          fi
-
-      - name: Build (optional)
-        if: matrix.language == 'javascript' || matrix.language == 'typescript'
-        run: |
-          if [ -f package.json ]; then npm run build --if-present; fi
+      # JavaScript analysis uses build-mode: none, so dependency installation
+      # and project builds are intentionally skipped.
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
