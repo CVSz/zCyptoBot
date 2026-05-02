@@ -225,6 +225,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      issues: write
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -240,6 +241,7 @@ jobs:
         with:
           target: 'https://example.com'
           fail_action: false
+          allow_issue_writing: false
           cmd_options: '-J zap-report.json -w zap-report.md'
 
       - name: Convert ZAP JSON report to SARIF
