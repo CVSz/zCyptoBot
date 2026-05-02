@@ -79,7 +79,24 @@ jobs:
                   text = alert.get("alert", "ZAP alert detected")
                   risk = (alert.get("riskdesc", "") or "").split()[0].lower()
                   level = "warning" if risk in {"low", "medium", "high"} else "note"
-                  results.append({"ruleId": rule, "level": level, "message": {"text": text}})
+                  site_name = site.get("name") or "https://example.com"
+                  instances = alert.get("instances") or [{}]
+                  for inst in instances:
+                      uri = inst.get("uri") or site_name
+                      if not str(uri).startswith(("http://", "https://")):
+                          uri = f"https://example.com{uri if str(uri).startswith('/') else '/' + str(uri)}"
+                      method = inst.get("method")
+                      msg = f"[{method}] {text}" if method else text
+                      results.append({
+                          "ruleId": rule,
+                          "level": level,
+                          "message": {"text": msg},
+                          "locations": [{
+                              "physicalLocation": {
+                                  "artifactLocation": {"uri": uri}
+                              }
+                          }],
+                      })
 
           sarif = {
               "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
