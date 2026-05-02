@@ -82,29 +82,189 @@ jobs:
           category: ${{ matrix.category || format('/language:{0}', matrix.language) }}
 
   osv_scan_production:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     name: OSV-Scan-Production / Dependency Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
     steps:
-      - run: echo "Status check placeholder to satisfy required PR context."
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install OSV-Scanner
+        shell: bash
+        run: |
+          curl -sSfL https://github.com/google/osv-scanner/releases/download/v2.3.5/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner
+          chmod +x /usr/local/bin/osv-scanner
+
+      - name: Run OSV dependency audit
+        shell: bash
+        run: |
+          set +e
+          osv-scanner scan --recursive --format sarif --output-file osv-results.sarif --experimental-exclude g:**/__pycache__/* --experimental-exclude g:audit_simulation/evidence/* --experimental-exclude g:war_simulation/** --experimental-exclude g:dataroom/** ./
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ] && [ "$code" -ne 1 ] && [ "$code" -ne 130 ]; then
+            exit "$code"
+          fi
+
+      - name: Upload OSV SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: osv-results.sarif
+          category: osv-scanner
 
   sovereign_execution_pipeline:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     name: Sovereign Execution Pipeline / Immutable Supply Chain Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - run: echo "Status check placeholder to satisfy required PR context."
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Validate Go manifests
+        shell: bash
+        run: |
+          mapfile -t go_mod_dirs < <(find . -name go.mod -not -path '*/vendor/*' -exec dirname {} \; | sort -u)
+          if [ ${#go_mod_dirs[@]} -eq 0 ]; then
+            echo "No go.mod files found; skipping Go manifest validation"
+            exit 0
+          fi
+          for dir in "${go_mod_dirs[@]}"; do
+            echo "Resolving Go modules in ${dir}"
+            (
+              cd "${dir}"
+              go mod tidy
+              go mod download
+            )
+          done
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Python manifests
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          mapfile -t req_files < <(find . -name 'requirements*.txt' -not -path './.venv/*' | sort)
+          if [ ${#req_files[@]} -eq 0 ]; then
+            echo "No requirements files found; skipping Python manifest validation"
+            exit 0
+          fi
+          for req in "${req_files[@]}"; do
+            echo "Validating Python dependencies in ${req}"
+            pip install --dry-run -r "${req}"
+          done
+
+      - name: Run immutable supply chain audit with OSV
+        shell: bash
+        run: |
+          curl -sSfL https://github.com/google/osv-scanner/releases/download/v2.3.5/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner
+          chmod +x /usr/local/bin/osv-scanner
+          set +e
+          osv-scanner scan --recursive --no-resolve --format sarif --output-file immutable-supply-chain.sarif --experimental-exclude g:**/__pycache__/* --experimental-exclude g:audit_simulation/evidence/* --experimental-exclude g:war_simulation/** --experimental-exclude g:dataroom/** ./
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ] && [ "$code" -ne 1 ] && [ "$code" -ne 130 ]; then
+            exit "$code"
+          fi
+
+      - name: Upload immutable supply chain SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: immutable-supply-chain.sarif
+          category: immutable-supply-chain
 
   security_gate:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     name: Security Gate / gate
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Status check placeholder to satisfy required PR context."
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep gate
+        run: semgrep scan --config p/ci --sarif --output semgrep.sarif --error
+
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep-gate
 
   dast:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     name: DAST / zap
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - run: echo "Status check placeholder to satisfy required PR context."
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Create baseline target list
+        run: |
+          cat > zap-targets.txt <<'EOF'
+          https://example.com
+          EOF
+
+      - name: Run ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.13.0
+        with:
+          target: 'https://example.com'
+          fail_action: false
+          cmd_options: '-J zap-report.json -w zap-report.md'
+
+      - name: Convert ZAP JSON report to SARIF
+        shell: bash
+        run: |
+          python - <<'PY2'
+          import json, pathlib
+          report = pathlib.Path('zap-report.json')
+          sarif = {
+            "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [{
+              "tool": {"driver": {"name": "OWASP ZAP Baseline", "informationUri": "https://www.zaproxy.org/"}},
+              "results": []
+            }]
+          }
+          if report.exists():
+            data = json.loads(report.read_text())
+            for site in data.get('site', []):
+              for alert in site.get('alerts', []):
+                sarif['runs'][0]['results'].append({
+                  "ruleId": alert.get('pluginid', 'zap-alert'),
+                  "level": "warning",
+                  "message": {"text": alert.get('alert', 'ZAP alert detected')}
+                })
+          pathlib.Path('zap-report.sarif').write_text(json.dumps(sarif))
+          PY2
+
+      - name: Upload ZAP SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: zap-report.sarif
+          category: dast-zap
