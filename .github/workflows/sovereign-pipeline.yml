@@ -27,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          path: repo
 
       - name: Setup Go Toolchain
         uses: actions/setup-go@v5
@@ -37,7 +38,7 @@ jobs:
       - name: Resolve Go Manifests
         shell: bash
         run: |
-          mapfile -t go_mod_dirs < <(find . -name go.mod -not -path '*/vendor/*' -exec dirname {} \; | sort -u)
+          mapfile -t go_mod_dirs < <(find ./repo -name go.mod -not -path '*/vendor/*' -exec dirname {} \; | sort -u)
           if [ ${#go_mod_dirs[@]} -eq 0 ]; then
             echo "No go.mod files found; skipping Go resolution"
             exit 0
@@ -65,7 +66,7 @@ jobs:
           source .ci-venv/bin/activate
           python -m pip install --upgrade pip
 
-          mapfile -t req_files < <(find . -name 'requirements*.txt' -not -path './.ci-venv/*' | sort)
+          mapfile -t req_files < <(find ./repo -name 'requirements*.txt' -not -path './repo/.ci-venv/*' | sort)
           if [ ${#req_files[@]} -eq 0 ]; then
             echo "No requirements files found; skipping Python resolution"
             exit 0
@@ -81,7 +82,7 @@ jobs:
         continue-on-error: false
         with:
           scan-args: |-
-            --recursive ./
+            --recursive ./repo
             --format sarif
             --output-file results.sarif
             --call-analysis=all
