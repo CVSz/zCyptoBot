@@ -1,13 +1,2 @@
-# CVSz/Zypto OSV Configuration
-
-[scan]
-exclude = [
-  "**/__pycache__/*",
-  "audit_simulation/evidence/*",
-  "war_simulation/**",
-  "dataroom/**"
-]
-
-[[ignored_vulnerabilities]]
-# id = "GHSA-xxxx-xxxx-xxxx"
-# reason = "Confirmed non-exploitable in isolated TEE environment."
+# OSV-Scanner config placeholder.
+# Exclusions are supplied via CLI in CI workflows for compatibility with v2.3.5.
