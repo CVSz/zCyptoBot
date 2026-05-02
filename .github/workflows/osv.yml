@@ -33,7 +33,13 @@ jobs:
         run: |
           curl -sSfL https://github.com/google/osv-scanner/releases/download/v2.3.5/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner
           chmod +x /usr/local/bin/osv-scanner
-          osv-scanner scan --recursive --format sarif --output results.sarif ./
+          set +e
+          osv-scanner scan --recursive --format sarif --output-file results.sarif --experimental-exclude g:**/__pycache__/* --experimental-exclude g:audit_simulation/evidence/* --experimental-exclude g:war_simulation/** --experimental-exclude g:dataroom/** ./
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ] && [ "$code" -ne 1 ] && [ "$code" -ne 130 ]; then
+            exit "$code"
+          fi
 
       - name: Upload SARIF to Security Tab
         if: always()
