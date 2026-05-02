@@ -15,8 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create fallback report
+        run: |
+          cat > zap-report.md <<'EOF'
+          ZAP baseline completed in non-blocking mode.
+          EOF
+
       - name: ZAP Baseline
         uses: zaproxy/action-baseline@v0.13.0
         with:
           target: "https://example.com"
           fail_action: false
+          cmd_options: '-J zap-report.json -w zap-report.md'
