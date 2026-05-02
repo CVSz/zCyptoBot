@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import torch
-from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket
 
 from auth import verify
 from billing import get_usage, track
@@ -11,6 +11,7 @@ from feature_store.offline import insert
 from feature_store.online import put
 from rbac import check
 from rl.model import ACTIONS, PolicyNet
+from i18n import get_messages, normalize_locale
 
 app = FastAPI()
 
@@ -50,6 +51,7 @@ def admin_usage(tenant: str, claims: dict = Depends(require_auth)):
 
 @app.websocket("/ws/{tenant}")
 async def ws(ws: WebSocket, tenant: str):
+    locale = normalize_locale(ws.query_params.get("locale"))
     await ws.accept()
     while True:
         s = get_state(tenant)
@@ -69,5 +71,11 @@ async def ws(ws: WebSocket, tenant: str):
         except Exception as exc:  # noqa: BLE001
             await ws.send_json({"offline_insert_error": str(exc)})
 
-        await ws.send_json({"state": s, "action": a, "cost": cost, "usage_total": get_usage(tenant)})
+        await ws.send_json({"state": s, "action": a, "cost": cost, "usage_total": get_usage(tenant), "locale": locale, "messages": get_messages(locale)})
         await asyncio.sleep(1)
+
+
+@app.get("/i18n/messages")
+def i18n_messages(locale: str = Query(default="en")):
+    normalized = normalize_locale(locale)
+    return {"locale": normalized, "messages": get_messages(normalized)}
