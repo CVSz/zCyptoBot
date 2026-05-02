@@ -17,4 +17,4 @@ jobs:
       - name: Generate provenance attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: '.'
+          subject-path: '.github/workflows/provenance.yml'

@@ -1,8 +1,7 @@
 from decentralized.fairness.drf import pick_min_dominant
 from decentralized.fairness.quota import allow
 from decentralized.p2p.peer_store import list_peers
-from decentralized.tee.attest_verify import verify_quote
-from decentralized.trust.byzantine import filter_outliers, quorum
+from decentralized.trust.byzantine import filter_outliers
 from decentralized.trust.scoring import get as trust_score
 from decentralized.zk.audit import append
 from decentralized.zk.commit import commit
