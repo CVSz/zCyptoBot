@@ -1,5 +1,5 @@
 aiokafka
-httpx>=0.20.0
+httpx>=0.23.3
 numpy
 clickhouse-driver
 pydantic-settings
