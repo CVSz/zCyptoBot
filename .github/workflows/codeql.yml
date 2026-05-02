@@ -30,7 +30,7 @@ jobs:
           - language: "actions"
             build-mode: none
           - language: "go"
-            build-mode: none
+            build-mode: autobuild
           - language: "python"
             build-mode: none
           - language: "javascript"
@@ -73,7 +73,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f pyproject.toml ]; then pip install .; fi
 
-      # JavaScript/TypeScript, Go, and Actions analyses use build-mode: none,
+      # JavaScript/TypeScript and Actions analyses use build-mode: none,
       # so dependency installation and project builds are intentionally skipped.
 
       - name: Perform CodeQL Analysis
