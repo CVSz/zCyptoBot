@@ -119,13 +119,13 @@ jobs:
 
       - name: Install Foundry
         if: steps.solidity.outputs.found == 'true'
-        uses: foundry-rs/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@c7450ba673e133f5ee30098b3b54f444d3a2ca2d # v1
         with:
           version: nightly
 
       - name: Execute Slither Static Analyzer
         if: steps.solidity.outputs.found == 'true'
-        uses: crytic/slither-action@v0.4.0
+        uses: crytic/slither-action@f197989dea5b53e986d0f88c60a034ddd77ec9a8 # v0.4.0
         continue-on-error: false
         with:
           target: .
@@ -146,7 +146,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Semgrep CI
-        uses: returntocorp/semgrep-action@v1
+        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
         with:
           config: >-
             p/ci

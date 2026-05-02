@@ -1,5 +1,5 @@
 numpy
-httpx>=0.20.0
+httpx>=0.23.3
 pydantic-settings
 h11>=0.16.0
 h2>=4.3.0
