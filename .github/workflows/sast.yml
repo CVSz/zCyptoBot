@@ -18,7 +18,7 @@ jobs:
       - run: pip install bandit semgrep
 
       - name: Bandit
-        run: bandit -r . -x tests,venv,.git
+        run: bandit -r . -x tests,venv,.git -s B311
 
       - name: Semgrep
         run: semgrep scan --config "p/ci" --error

@@ -1,5 +1,4 @@
 from functools import lru_cache
-from urllib.request import urlopen
 
 import jwt
 from fastapi import Depends, HTTPException

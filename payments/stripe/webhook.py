@@ -2,7 +2,6 @@
 
 import os
 
-import stripe
 
 endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
