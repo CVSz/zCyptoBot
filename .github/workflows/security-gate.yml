@@ -1,6 +1,9 @@
 name: Security Gate
 
-on: [pull_request]
+on:
+  push:
+    branches: ["**"]
+  pull_request:
 
 permissions:
   contents: read
@@ -14,7 +17,7 @@ jobs:
       - run: pip install semgrep
 
       - name: Run Semgrep
-        run: semgrep scan --config p/ci --error
+        run: semgrep scan --config p/ci --sarif --output semgrep.sarif --error
 
       - name: Fail on critical
         run: |

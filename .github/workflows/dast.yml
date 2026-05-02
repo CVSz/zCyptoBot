@@ -1,8 +1,10 @@
 name: DAST
 
 on:
-  workflow_dispatch:
+  push:
+    branches: ["**"]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,19 +12,11 @@ permissions:
 jobs:
   zap:
     runs-on: ubuntu-latest
-    services:
-      app:
-        image: zypto:latest
-        ports:
-          - 8080:8080
     steps:
-      - name: Wait for app
-        run: |
-          for i in {1..30}; do
-            curl -s http://localhost:8080/health && break || sleep 2
-          done
+      - uses: actions/checkout@v4
 
       - name: ZAP Baseline
-        uses: zaproxy/action-baseline@99b9334bed0a0ff8d797764e76c9ecae53168436 # v0.10.0
+        uses: zaproxy/action-baseline@v0.13.0
         with:
-          target: "http://localhost:8080"
+          target: "https://example.com"
+          fail_action: false

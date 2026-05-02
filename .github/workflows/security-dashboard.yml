@@ -2,7 +2,7 @@ name: Security Dashboard
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
 
 permissions:
   contents: read
@@ -16,7 +16,7 @@ jobs:
       - name: Run Semgrep
         run: |
           pip install semgrep
-          semgrep scan --config p/ci --sarif > semgrep.sarif
+          semgrep scan --config p/ci --sarif --output semgrep.sarif
 
       - name: Prepare SARIF inputs
         run: |
