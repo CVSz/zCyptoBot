@@ -1,0 +1,119 @@
+name: Sovereign Execution Pipeline
+
+on:
+  push:
+    branches: [ "main", "production" ]
+  pull_request:
+    branches: [ "main", "production" ]
+  schedule:
+    - cron: '0 2 * * *' # Deterministic daily anomaly scanning
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-resolution-and-audit:
+    name: Immutable Supply Chain Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source (No History)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Go Toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Resolve Go Manifests
+        run: |
+          cd p2p/go-node && go mod tidy && go mod download
+
+      - name: Setup Python Runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Resolve Python Manifests
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          find . -name "requirements*.txt" -exec pip install -r {} --dry-run \;
+
+      - name: Execute OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.5
+        continue-on-error: false
+        with:
+          scan-args: |-
+            --recursive ./
+            --format sarif
+            --output-file results.sarif
+            --experimental-call-analysis
+            --ignore-unfixed
+
+      - name: Upload SARIF Security Intent
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: osv-scanner
+
+  smart-contract-verifier:
+    name: Immutable Contract Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Execute Slither Static Analyzer
+        uses: crytic/slither-action@v0.4.0
+        continue-on-error: false
+        with:
+          target: './contracts'
+          slither-args: '--exclude-dependencies --filter-paths "node_modules|lib" --sarif results.sarif'
+
+      - name: Upload Contract SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: slither-contracts
+
+  architecture-policy-enforcer:
+    name: Trust-Minimized Code Policies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Semgrep CI
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/ci
+            p/security-audit
+            p/solidity
+            p/golang
+          generateSarif: "1"
+
+      - name: Upload Semgrep SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep-architecture
