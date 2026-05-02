@@ -1,18 +1,37 @@
-name: osv-scan
+name: OSV-Scanner
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * 1' # Weekly scan for new vulnerabilities
 
 jobs:
-  osv:
+  scan:
     runs-on: ubuntu-latest
+    permissions:
+      # Required to upload results to GitHub Security tab
+      security-events: write
+      # Required to read repository content
+      contents: read
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Run OSV Scanner
-        uses: google/osv-scanner-action@v2
-        continue-on-error: true
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
-          scan-args: |
-            -r .
+          persist-credentials: false
+
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action@v1
+        with:
+          # Scans the entire repository recursively
+          scan-args: |-
+            --recursive
+            ./
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
