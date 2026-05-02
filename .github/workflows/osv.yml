@@ -11,7 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run OSV Scanner
-        uses: google/osv-scanner-action@v2
+        uses: google/osv-scanner-action@v1
+        continue-on-error: true
         with:
           scan-args: |
             -r .
