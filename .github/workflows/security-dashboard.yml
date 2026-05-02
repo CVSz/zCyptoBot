@@ -23,7 +23,14 @@ jobs:
       - name: Merge SARIF
         run: |
           pip install sarif-tools
-          sarif-merge sarif/*.sarif > merged.sarif
+          if command -v sarif-merge >/dev/null 2>&1; then
+            sarif-merge sarif/*.sarif > merged.sarif
+          elif command -v sarif >/dev/null 2>&1; then
+            sarif copy sarif/*.sarif > merged.sarif
+          else
+            echo "No SARIF merge CLI found; using first SARIF file"
+            cp sarif/semgrep.sarif merged.sarif
+          fi
 
       - name: Generate HTML
         run: |
