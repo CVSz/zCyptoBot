@@ -45,6 +45,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          dependency-caching: false
           queries: security-and-quality
           config-file: .github/codeql/codeql-config.yml
 
