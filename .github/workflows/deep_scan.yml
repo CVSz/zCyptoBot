@@ -3,6 +3,9 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
+permissions:
+  contents: read
+
 jobs:
   deep_scan:
     runs-on: ubuntu-latest

@@ -1,9 +1,8 @@
 from functools import lru_cache
 
-import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt import PyJWKClient
+from jwt import PyJWKClient, decode as jwt_decode
 
 bearer = HTTPBearer()
 
@@ -17,7 +16,7 @@ def verify_oidc(credentials: HTTPAuthorizationCredentials = Depends(bearer)) -> 
     token = credentials.credentials
     try:
         signing_key = _jwk_client().get_signing_key_from_jwt(token)
-        return jwt.decode(
+        return jwt_decode(
             token,
             signing_key.key,
             algorithms=["RS256"],

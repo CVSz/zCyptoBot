@@ -66,8 +66,8 @@ async def ws(ws: WebSocket, tenant: str):
 
         try:
             insert(tenant, s)
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001
+            await ws.send_json({"offline_insert_error": str(exc)})
 
         await ws.send_json({"state": s, "action": a, "cost": cost, "usage_total": get_usage(tenant)})
         await asyncio.sleep(1)

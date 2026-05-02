@@ -10,7 +10,7 @@ RESULTS: dict[str, list[float]] = {"A": [], "B": []}
 
 def assign(user_id: str) -> str:
     """Assign users deterministically into A or B using stable hashing."""
-    bucket = int(hashlib.sha1(user_id.encode("utf-8")).hexdigest(), 16)
+    bucket = int(hashlib.sha256(user_id.encode("utf-8")).hexdigest(), 16)
     return "A" if bucket % 2 == 0 else "B"
 
 
