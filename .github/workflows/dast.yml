@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   zap:
@@ -26,4 +27,5 @@ jobs:
         with:
           target: "https://example.com"
           fail_action: false
+          allow_issue_writing: false
           cmd_options: '-J zap-report.json -w zap-report.md'
