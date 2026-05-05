@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: zeaz-observability
+data:
+  collector.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc: {}
+          http: {}
+    processors:
+      memory_limiter: {}
+      batch: {}
+      attributes/siem:
+        actions:
+          - key: zeaz.platform
+            value: unified
+            action: upsert
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:8888
+      otlp/tempo:
+        endpoint: tempo.zeaz-observability.svc:4317
+        tls:
+          insecure: true
+      elasticsearch:
+        endpoints: [http://elasticsearch-master.zeaz-observability.svc:9200]
+        logs_index: zeaz-audit-logs
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/tempo]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, attributes/siem, batch]
+          exporters: [elasticsearch]

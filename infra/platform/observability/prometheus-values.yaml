@@ -1,0 +1,28 @@
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    enableRemoteWriteReceiver: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    additionalScrapeConfigs:
+      - job_name: zeaz-otel-collector
+        static_configs:
+          - targets: ["otel-collector.zeaz-observability.svc:8888"]
+alertmanager:
+  enabled: true
+grafana:
+  enabled: true
+  defaultDashboardsEnabled: true
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+  additionalDataSources:
+    - name: Tempo
+      type: tempo
+      url: http://tempo.zeaz-observability.svc:3100
+      access: proxy
+    - name: Elasticsearch
+      type: elasticsearch
+      url: http://elasticsearch-master.zeaz-observability.svc:9200
+      access: proxy

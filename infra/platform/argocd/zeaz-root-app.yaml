@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zeaz-platform-root
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: zeaz-platform
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cvsz/zypto.git
+    targetRevision: HEAD
+    path: infra/platform
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zeaz-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
