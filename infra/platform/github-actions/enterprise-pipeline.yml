@@ -1,0 +1,42 @@
+name: Enterprise Build Test Scan Deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build Go services
+        run: |
+          if [ -d services/tss-signing ]; then (cd services/tss-signing && go test ./...); fi
+      - name: Shell syntax checks
+        run: bash -n scripts/zeaz-os-bootstrap.sh scripts/zeaz-enterprise-install.sh
+      - name: IaC validation
+        run: |
+          terraform -chdir=infra/platform/terraform fmt -check
+          terraform -chdir=infra/platform/cloudflare fmt -check
+      - name: Generate SBOM placeholder
+        run: mkdir -p artifacts && echo '{"status":"sbom-hook"}' > artifacts/sbom.json
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/main'
+    needs: build-test-scan
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitOps deploy staging
+        run: scripts/zeaz-enterprise-install.sh --env staging --plan

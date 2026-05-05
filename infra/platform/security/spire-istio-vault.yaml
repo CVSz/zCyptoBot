@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zeaz-security
+  labels:
+    zeaz.dev/layer: security
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default-strict-mtls
+  namespace: zeaz-security
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: zeaz-security
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zeaz-zero-trust-model
+  namespace: zeaz-security
+data:
+  spiffe-trust-domain: zeaz.dev
+  mtls-mode: STRICT
+  vault-secret-prefix: secret/data/zeaz
+  signer-boundary: tss-signing-service.zeaz-security.svc.cluster.local
+  policy: |
+    - every workload must have a SPIFFE ID
+    - service-to-service traffic must use mTLS
+    - secrets are delivered by Vault/ExternalSecrets only
+    - signer pods have no public ingress and deny-all egress except quorum peers, audit, and Vault/HSM endpoints
